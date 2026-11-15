@@ -29,7 +29,7 @@ docs/               GitHub Pages site (landing page) and all product documentati
   product/          Product and build plan
   research/         Market research behind the product decision
   assets/screens/   Mockup screenshots used on the landing page
-pipeline/           Python: street-pack builder, reference matcher, evaluation (week 1, coming next)
+pipeline/           Python: street-pack builder, reference matcher, evaluation (week 1)
 ```
 
 ## Week 1: run the matching spike
