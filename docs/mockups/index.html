@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreetFill · UI mockups for v1 design review</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;background:#E7E7EC;color:#1d1d1f;-webkit-font-smoothing:antialiased}
+.page-h{max-width:1400px;margin:0 auto;padding:40px 28px 8px}
+.page-h h1{font-size:34px;letter-spacing:-.02em}
+.page-h .meta{color:#6e6e73;margin-top:6px;font-size:15px}
+.note{margin-top:16px;background:#fff;border-radius:18px;padding:16px 20px;font-size:14.5px;line-height:1.5;max-width:980px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.note b{font-weight:600}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:#3a3a3c;align-items:center}
+.legend span{display:flex;align-items:center;gap:8px}
+h2.sec{max-width:1400px;margin:44px auto 0;padding:0 28px;font-size:22px;letter-spacing:-.01em}
+h2.sec small{font-weight:400;color:#6e6e73;font-size:15px;margin-left:8px}
+.grid{max-width:1400px;margin:0 auto;padding:22px 28px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:48px 20px;justify-items:center}
+figure.shot{width:414px}
+.cap-top{font-size:15px;font-weight:600;margin:0 0 14px 6px;display:flex;gap:10px;align-items:baseline}
+.cap-top b{background:#1d1d1f;color:#fff;border-radius:7px;padding:2px 7px;font-size:13px}
+.cap-top .v11{background:#6B4FD8;color:#fff;border-radius:7px;padding:2px 7px;font-size:12px}
+figcaption{font-size:13.5px;color:#4a4a4f;margin:18px 6px 0;line-height:1.45}
+@media (max-width:470px){figure.shot{width:340px}.phone{zoom:.82}.grid{grid-template-columns:1fr}}
+
+/* ---------- Phone frame ---------- */
+.phone{width:390px;height:844px;border-radius:56px;position:relative;overflow:hidden;margin:0 auto;
+ box-shadow:0 0 0 11px #121214,0 0 0 13px #3b3b3f,0 26px 50px rgba(0,0,0,.28);background:var(--bg);color:var(--text)}
+.light{--bg:#F2F2F7;--card:#fff;--text:#000;--sec:rgba(60,60,67,.62);--ter:rgba(60,60,67,.32);--sep:rgba(60,60,67,.16);--fill:rgba(120,120,128,.13);
+ --glass:rgba(255,255,255,.74);--glassbd:rgba(255,255,255,.75);--accent:#D24F28;--tint:rgba(210,79,40,.12);
+ --land:#F1EEE8;--park:#DCE7D0;--water:#BBD4EB;--unc:#86868C;--cov:#D24F28;--new:#2668D8;--route:#1B2A48;--nbline:rgba(60,60,67,.38);--lbl:rgba(60,60,67,.6);--sugg:#11845A;--green:#34C759;--sb:#000}
+.dark{--bg:#000;--card:#1C1C1E;--text:#fff;--sec:rgba(235,235,245,.62);--ter:rgba(235,235,245,.3);--sep:rgba(84,84,88,.55);--fill:rgba(120,120,128,.26);
+ --glass:rgba(34,34,37,.72);--glassbd:rgba(255,255,255,.1);--accent:#FF7A50;--tint:rgba(255,122,80,.16);
+ --land:#1C1D20;--park:#1F2A21;--water:#13263A;--unc:#6C6C73;--cov:#FF7A50;--new:#5C9DFF;--route:#E8EBF2;--nbline:rgba(235,235,245,.3);--lbl:rgba(235,235,245,.5);--sugg:#3CCB8C;--green:#30D158;--sb:#fff}
+.sb{position:absolute;top:0;left:0;right:0;height:54px;display:flex;justify-content:space-between;align-items:center;padding:6px 34px 0 50px;z-index:50;font-weight:600;font-size:17px;color:var(--sb)}
+.sb.w{color:#fff}
+.sbi{display:flex;gap:6px;align-items:center}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:124px;height:36px;border-radius:20px;background:#000;z-index:60}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:138px;height:5px;border-radius:3px;background:var(--text);opacity:.85;z-index:60}
+.scroll{position:absolute;inset:0;overflow:hidden;padding-top:54px}
+
+/* ---------- Typography ---------- */
+.lt{font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:41px;padding:4px 20px 6px}
+.lsub{color:var(--sec);font-size:15px;padding:0 20px 10px}
+.t2{font-size:22px;font-weight:700;letter-spacing:-.015em}
+.sec-t{color:var(--sec);font-size:13px;text-transform:uppercase;letter-spacing:.02em;padding:18px 36px 7px}
+.sec-h{font-size:20px;font-weight:700;padding:20px 20px 8px;letter-spacing:-.01em}
+.foot{color:var(--sec);font-size:13px;padding:7px 36px 0;line-height:1.38}
+.mono{font-variant-numeric:tabular-nums}
+.secc{color:var(--sec)}
+
+/* ---------- Nav bar ---------- */
+.nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative}
+.nav .ttl{position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;pointer-events:none}
+.gbtn{width:44px;height:44px;border-radius:22px;background:var(--glass);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
+ display:flex;align-items:center;justify-content:center;color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.12),inset 0 0 0 .5px var(--glassbd);position:relative;z-index:2}
+.gcap{height:44px;border-radius:22px;padding:0 16px;background:var(--glass);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
+ display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:17px;box-shadow:0 1px 6px rgba(0,0,0,.12),inset 0 0 0 .5px var(--glassbd);position:relative;z-index:2}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.i.s{width:17px;height:17px}
+.i.xs{width:13px;height:13px;stroke-width:2.4}
+.acc{color:var(--accent)}
+
+/* ---------- Lists ---------- */
+.list{margin:0 16px;background:var(--card);border-radius:24px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 16px;position:relative;font-size:17px}
+.row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.row.ind+.row.ind::before{left:58px}
+.row .grow{flex:1;min-width:0}
+.row .sub{color:var(--sec);font-size:14px;margin-top:2px}
+.row .val{color:var(--sec);font-size:17px}
+.row .chev{color:var(--ter)}
+.ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.pbar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden;margin-top:7px}
+.pbar i{display:block;height:100%;background:var(--cov);border-radius:3px}
+.pct{font-weight:600;font-variant-numeric:tabular-nums;font-size:17px;min-width:44px;text-align:right}
+.badge{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 7px;border-radius:7px;background:var(--tint);color:var(--accent)}
+.nbadge{font-size:13px;font-weight:600;padding:3px 9px;border-radius:10px;background:rgba(38,104,216,.13);color:var(--new);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dark .nbadge{background:rgba(92,157,255,.18)}
+.toggle{width:51px;height:31px;border-radius:16px;background:var(--green);position:relative;flex:none}
+.toggle::after{content:"";position:absolute;top:2px;right:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.toggle.off{background:var(--fill)}
+.toggle.off::after{right:auto;left:2px}
+.search{margin:4px 16px 10px;height:40px;border-radius:20px;background:var(--fill);display:flex;align-items:center;gap:7px;padding:0 12px;color:var(--sec);font-size:17px}
+.seg{margin:4px 16px 12px;height:34px;border-radius:17px;background:var(--fill);display:flex;padding:2px;font-size:14px;font-weight:500}
+.seg span{flex:1;display:flex;align-items:center;justify-content:center;border-radius:15px}
+.seg span.on{background:var(--card);box-shadow:0 2px 6px rgba(0,0,0,.12);font-weight:600}
+.dark .seg span.on{background:#636366}
+
+/* ---------- Buttons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:26px;background:var(--accent);color:#fff;font-size:17px;font-weight:600;margin:0 20px}
+.btn.tinted{background:var(--tint);color:var(--accent)}
+.btn.plain{background:none;color:var(--accent);height:40px}
+.btn.red{background:none;color:#FF3B30}
+.cta{position:absolute;left:0;right:0;bottom:34px}
+.fine{color:var(--sec);font-size:13px;text-align:center;margin-top:12px;padding:0 30px;line-height:1.4}
+
+/* ---------- Map ---------- */
+svg.map{display:block;width:100%;height:100%}
+.land{fill:var(--land)} .park{fill:var(--park)} .water{fill:var(--water)}
+.riv{fill:none;stroke:var(--water);stroke-width:5}
+.su{fill:none;stroke:var(--unc);stroke-width:1.3;stroke-dasharray:2.6 2.6}
+.sua{fill:none;stroke:var(--unc);stroke-width:2;stroke-dasharray:3.2 2.6}
+.sc{fill:none;stroke:var(--cov);stroke-width:3;stroke-linecap:round}
+.sca{fill:none;stroke:var(--cov);stroke-width:4.3;stroke-linecap:round}
+.sn{fill:none;stroke:var(--new);stroke-width:4.6;stroke-linecap:round}
+.sn2{fill:none;stroke:#fff;stroke-width:1.4;stroke-dasharray:2 3}
+.rt{fill:none;stroke:var(--route);stroke-width:1.4;opacity:.75}
+.sg0{fill:none;stroke:#fff;stroke-width:8.5;stroke-linecap:round;stroke-linejoin:round}
+.sg{fill:none;stroke:var(--sugg);stroke-width:5;stroke-dasharray:7 4;stroke-linejoin:round}
+.nbo{fill:none;stroke:var(--nbline);stroke-width:1.1;stroke-dasharray:7 4}
+.lbl{fill:var(--lbl);font:700 11px -apple-system,BlinkMacSystemFont,Helvetica,sans-serif;letter-spacing:.09em}
+.hl{fill:var(--cov);fill-opacity:.07;stroke:var(--cov);stroke-width:2;stroke-dasharray:7 4}
+.mapcard{margin:0 16px;border-radius:24px;overflow:hidden;position:relative;background:var(--land)}
+.attr{position:absolute;font-size:9.5px;color:var(--sec);background:var(--glass);padding:2px 6px;border-radius:6px}
+
+/* ---------- Map home ---------- */
+.full{position:absolute;inset:0}
+.topbar{position:absolute;top:58px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;z-index:5}
+.topbar .r{display:flex;gap:10px}
+.legchip{position:absolute;top:112px;left:16px;z-index:5;display:flex;gap:12px;align-items:center;padding:7px 12px;border-radius:16px;font-size:12px;font-weight:500;
+ background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 1px 5px rgba(0,0,0,.1),inset 0 0 0 .5px var(--glassbd)}
+.legchip span{display:flex;align-items:center;gap:5px}
+.sheet{position:absolute;left:8px;right:8px;background:var(--glass);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+ border-radius:36px;box-shadow:0 6px 24px rgba(0,0,0,.16),inset 0 0 0 .5px var(--glassbd);z-index:6;padding:8px 20px 16px}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--ter);margin:0 auto 10px}
+.big{font-size:54px;font-weight:700;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.minirow{display:flex;align-items:center;gap:10px;padding:10px 0;font-size:15px}
+.minirow+.minirow{border-top:.5px solid var(--sep)}
+
+/* ---------- Tab bar ---------- */
+.tabs{position:absolute;left:20px;right:20px;bottom:26px;height:62px;border-radius:31px;display:flex;padding:4px;z-index:20;
+ background:var(--glass);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);box-shadow:0 4px 18px rgba(0,0,0,.14),inset 0 0 0 .5px var(--glassbd)}
+.tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--text);border-radius:27px}
+.tabs div.on{color:var(--accent);background:var(--fill)}
+
+/* ---------- Tiles ---------- */
+.tiles{display:flex;gap:10px;margin:0 16px}
+.tile{flex:1;background:var(--card);border-radius:20px;padding:12px 12px 11px}
+.tile .n{font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile .l{font-size:13px;color:var(--sec);margin-top:1px;line-height:1.25}
+
+/* ---------- Modal sheet ---------- */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.28);z-index:8}
+.msheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-radius:38px 38px 0 0;z-index:9;box-shadow:0 -4px 30px rgba(0,0,0,.18)}
+.app{width:60px;height:60px;flex:none}
+.vtag{position:absolute;top:54px;left:0;right:0;z-index:40;text-align:center}
+.vtag span{display:inline-block;background:#6B4FD8;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;padding:5px 12px;border-radius:12px}
+.light{--sand:#EADBB2}.dark{--sand:#3B3424}
+.rel{background:#1F7A4D;color:#fff;border-radius:7px;padding:2px 7px;font-size:12px}
+.rk{fill:none;stroke:var(--sugg);stroke-width:3.2;stroke-dasharray:6 4;stroke-linejoin:round}
+.rn{fill:none;stroke:var(--sugg);stroke-width:5.6;stroke-linecap:round;stroke-linejoin:round}
+.rn2{fill:none;stroke:#fff;stroke-width:1.9;stroke-dasharray:.1 5;stroke-linecap:round}
+.tc{fill:none;stroke:var(--cov);stroke-width:3.2;stroke-dasharray:.1 5.2;stroke-linecap:round}
+.tu{fill:none;stroke:var(--unc);stroke-width:2.6;stroke-dasharray:.1 4.6;stroke-linecap:round}
+.beach{fill:var(--sand)}
+.zone{fill:var(--cov);fill-opacity:.1;stroke:var(--cov);stroke-width:2;stroke-dasharray:5 4}
+.pin circle{fill:#fff;stroke:var(--sugg);stroke-width:2.2}
+.pin text{fill:var(--sugg);font-weight:800;font-family:-apple-system,Helvetica,sans-serif}
+.gbadge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;background:rgba(17,132,90,.13);color:var(--sugg)}
+.sl{position:relative;height:28px;margin:4px 0}
+.sl .trk{position:absolute;top:11px;left:0;right:0;height:6px;border-radius:3px;background:var(--fill)}
+.sl .trk i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.sl .knob{position:absolute;top:0;width:28px;height:28px;margin-left:-14px;border-radius:14px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2),0 0 0 .5px rgba(0,0,0,.06)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:34px;border-radius:17px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;background:var(--fill)}
+.chip.on{background:var(--tint);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.ctl{background:var(--card);border-radius:24px;margin:0 16px 8px;padding:10px 16px}
+.ctl .lab{display:flex;justify-content:space-between;font-size:15px;font-weight:600}
+.ctl .tick{display:flex;justify-content:space-between;font-size:12px;color:var(--sec)}
+.rcard{background:var(--card);border-radius:24px;margin:0 16px 10px;display:flex;gap:12px;padding:10px}
+.rcard .mm{width:112px;height:150px;border-radius:16px;overflow:hidden;flex:none}
+.rn-t{font-size:17px;font-weight:600;line-height:1.2}
+.ph{position:relative;border-radius:12px;overflow:hidden;background:#ccc;flex:none}
+.ph>svg{display:block;width:100%;height:100%}
+.ph .phl{position:absolute;left:5px;bottom:5px;font-size:8.5px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;padding:2px 5px;border-radius:5px;letter-spacing:.03em}
+.ph .num{position:absolute;left:6px;top:6px;width:18px;height:18px;border-radius:9px;background:#fff;color:var(--sugg);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hn{font-size:12.5px;font-weight:600;margin-top:5px;width:118px;line-height:1.25}.hn span{color:var(--sec);font-weight:400}
+.av{width:34px;height:34px;border-radius:17px;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.cheer{font-size:13px;font-weight:600;color:var(--accent);background:var(--tint);border-radius:14px;padding:5px 10px;white-space:nowrap}
+.duo{display:flex;gap:6px;align-items:center;font-variant-numeric:tabular-nums;font-size:15px;min-width:92px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<!-- Shared SVG sprite: icons, app icon, map data (map data is generated by the script at the end) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs>
+  <linearGradient id="gIcon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F07A47"/><stop offset="1" stop-color="#C23E1C"/></linearGradient>
+  <symbol id="appicon" viewBox="0 0 60 60"><rect width="60" height="60" rx="13.5" fill="url(#gIcon)"/>
+   <g stroke="#fff" stroke-opacity=".35" stroke-width="1.6" stroke-dasharray="2 2"><path d="M15 6v48M30 6v48M45 6v48M6 15h48M6 30h48M6 45h48"/></g>
+   <path d="M15 45V30h15V15h15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z M9 4v13.5 M15 6.5V20"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-run" viewBox="0 0 24 24"><circle cx="5" cy="18.5" r="2"/><circle cx="19" cy="5.5" r="2"/><path d="M7 18.5h6a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M8 7.2l4-3.7 4 3.7M6.5 11H5v9.5h14V11h-1.5"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c1-3.8 3.9-5.6 7.5-5.6s6.5 1.8 7.5 5.6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevd" viewBox="0 0 24 24"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5.5L8.5 12l6.5 6.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.5 21V4M5.5 4.5h11l-2.2 4 2.2 4h-11"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 11 3.8 3.8 0 0 0 7 18.5z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 6.5h15M9.5 6.5V4.5h5v2M6.5 6.5l1 13.5h9l1-13.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.6v.4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5V6z M8.8 12l2.3 2.3 4.3-4.6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5.5a4 4 0 0 1-8 0z M8 6H4.5a3.5 3.5 0 0 0 3.8 4 M16 6h3.5a3.5 3.5 0 0 1-3.8 4 M12 13.5v3.5 M8.5 20.5h7 M10 17h4v3.5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-8-4.8-8-10.6A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 8 2.6c0 5.8-8 10.6-8 10.6z" fill="#FF2D55" stroke="none"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5l2.2 6.3 6.3 2.2-6.3 2.2L12 20.5l-2.2-6.3L3.5 12l6.3-2.2z"/></symbol>
+  <symbol id="i-figure" viewBox="0 0 24 24"><circle cx="14.5" cy="4.5" r="2"/><path d="M9 21l2.5-6 3 2.5V21 M7 11.5l3-3.5h4l2.5 3.5 2.5 1 M11.5 15l1.5-7"/></symbol>
+  <!-- legend line samples -->
+  <symbol id="lg-cov" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--cov)" stroke-width="4" stroke-linecap="round"/></symbol>
+  <symbol id="lg-unc" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--unc)" stroke-width="1.6" stroke-dasharray="2.6 2.6"/></symbol>
+  <symbol id="lg-new" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--new)" stroke-width="5" stroke-linecap="round"/><path d="M3 4h20" stroke="#fff" stroke-width="1.4" stroke-dasharray="2 3"/></symbol>
+  <symbol id="lg-mark" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--cov)" stroke-width="4.4" stroke-linecap="round"/><path d="M3 4h20" stroke="var(--card)" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="lg-sug" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--sugg)" stroke-width="4" stroke-dasharray="6 3"/></symbol>
+  <symbol id="i-loc" viewBox="0 0 24 24"><path d="M20 4L4 11l7.2 1.8L13 20z"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 21v-5M6.5 16h11L12 3.5z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6-4.5-4.1 6-.7z"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M7 3.5h10v17l-5-4-5 4z"/></symbol>
+  <symbol id="i-addp" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.6"/><path d="M3 20c.9-3.6 3.6-5.3 7-5.3s6.1 1.7 7 5.3M19 7.5v6M16 10.5h6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.8-6.5 9.5-6.5S21.5 12 21.5 12 17.7 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.1-5M19 4v4.5h-4.5"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/></symbol>
+  <symbol id="i-friends" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.7-3 3-4.6 6-4.6s5.3 1.6 6 4.6"/><circle cx="17" cy="9" r="2.6"/><path d="M16.2 14.6c2.6.1 4.3 1.6 5 4.4"/></symbol>
+  <symbol id="lg-path" viewBox="0 0 26 8"><path d="M3 4h20" stroke="var(--cov)" stroke-width="3.6" stroke-dasharray=".1 5" stroke-linecap="round"/></symbol>
+  <symbol id="lg-rn" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--sugg)" stroke-width="5.4" stroke-linecap="round"/><path d="M3 4h20" stroke="#fff" stroke-width="1.8" stroke-dasharray=".1 4.5" stroke-linecap="round"/></symbol>
+  <symbol id="lg-rk" viewBox="0 0 26 8"><path d="M2 4h22" stroke="var(--sugg)" stroke-width="3" stroke-dasharray="6 3"/></symbol>
+  <symbol id="ph-beach" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#BFE0F5"/><circle cx="132" cy="16" r="8" fill="#FFF3C4"/><g fill="#8FA3B8"><rect x="8" y="36" width="6" height="14"/><rect x="16" y="28" width="5" height="22"/><rect x="23" y="38" width="7" height="12"/><rect x="32" y="33" width="4" height="17"/></g><rect y="48" width="160" height="16" fill="#3F8CC0"/><path d="M0 50h160" stroke="#fff" stroke-opacity=".5"/><path d="M0 64c20-4 40 3 60 0s50-5 100 1V100H0z" fill="#EBD9A6"/><path d="M106 72l15-15 15 15z" fill="#E4572E"/><path d="M121 57v24" stroke="#7a5b3a" stroke-width="1.6"/></symbol>
+  <symbol id="ph-hill" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#CFE7F7"/><path d="M-10 100Q60 26 170 100z" fill="#7DBA6A"/><path d="M-10 100Q120 60 170 92V100z" fill="#94C97F"/><path d="M20 100Q60 50 92 50" fill="none" stroke="#E7DDBF" stroke-width="3" stroke-dasharray="5 4"/><path d="M112 14l7 8-7 8-7-8z" fill="#E4572E"/><path d="M112 30q-6 18-18 26" fill="none" stroke="#555" stroke-width=".8"/></symbol>
+  <symbol id="ph-cem" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#DDE6EE"/><rect y="70" width="160" height="30" fill="#8DB57A"/><g fill="#4F7A4A"><circle cx="18" cy="48" r="20"/><circle cx="140" cy="44" r="22"/><circle cx="112" cy="56" r="14"/></g><rect x="56" y="34" width="44" height="40" fill="#B8B0A2"/><path d="M66 74V56a12 12 0 0 1 24 0v18z" fill="#5F5A52"/><rect x="52" y="30" width="52" height="6" fill="#A39B8C"/><g fill="#9C978E"><rect x="20" y="78" width="6" height="9" rx="2"/><rect x="34" y="80" width="6" height="8" rx="2"/><rect x="118" y="79" width="6" height="9" rx="2"/></g></symbol>
+  <symbol id="ph-hedge" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#D8ECF6"/><g fill="#5D8F4E"><circle cx="10" cy="74" r="22"/><circle cx="44" cy="70" r="20"/><circle cx="82" cy="76" r="24"/><circle cx="124" cy="70" r="22"/><circle cx="156" cy="76" r="18"/></g><g fill="#77A862"><circle cx="28" cy="84" r="16"/><circle cx="64" cy="88" r="16"/><circle cx="104" cy="88" r="18"/><circle cx="142" cy="90" r="16"/></g><g fill="none" stroke="#333" stroke-width="1.4"><path d="M40 22l5 4 5-4M70 14l4 3 4-3M98 26l5 4 5-4"/></g></symbol>
+  <symbol id="ph-stadium" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#F4CDA8"/><rect y="0" width="160" height="40" fill="#E9B48C"/><path d="M0 100V58Q80 30 160 58V100z" fill="#8C6B4F"/><path d="M0 100V70Q80 50 160 70V100z" fill="#6F5440"/><rect x="52" y="24" width="56" height="20" rx="2" fill="#C8102E"/><rect x="58" y="29" width="44" height="10" fill="#E8E2D0"/><path d="M30 60V14M130 60V14" stroke="#444" stroke-width="2"/><rect x="24" y="10" width="12" height="6" fill="#FFF7D6"/><rect x="124" y="10" width="12" height="6" fill="#FFF7D6"/></symbol>
+  <symbol id="ph-river" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#D3E8F2"/><path d="M0 40h160v60H0z" fill="#6FA35E"/><path d="M60 40h30l40 60H40z" fill="#4F8DB8"/><path d="M92 40l44 60h10L100 40z" fill="#B08A5E"/><g fill="#3F6E3A"><circle cx="20" cy="36" r="16"/><circle cx="44" cy="40" r="12"/><circle cx="130" cy="34" r="16"/><circle cx="152" cy="40" r="12"/></g></symbol>
+  <symbol id="ph-park" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#CDE6F4"/><rect y="52" width="160" height="48" fill="#9BCB7F"/><path d="M70 100C80 80 110 70 160 64" fill="none" stroke="#E2D6B5" stroke-width="7"/><g fill="#4E8045"><circle cx="24" cy="44" r="18"/><circle cx="60" cy="40" r="15"/><circle cx="126" cy="42" r="17"/></g><g stroke="#6B4E33" stroke-width="3"><path d="M24 60v-8M60 56v-6M126 58v-8"/></g></symbol>
+  <symbol id="ph-terrace" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#D9E7F0"/><rect y="84" width="160" height="16" fill="#9A9DA3"/><g><path d="M4 84V40l12-10 12 10v44z" fill="#C98B6B"/><path d="M28 84V44l12-10 12 10v40z" fill="#E1C59A"/><path d="M52 84V40l12-10 12 10v44z" fill="#A7B79A"/><path d="M76 84V44l12-10 12 10v40z" fill="#C9A0A0"/><path d="M100 84V40l12-10 12 10v44z" fill="#B8C2CF"/><path d="M124 84V44l12-10 12 10v40z" fill="#D6B07E"/></g><g fill="#fff" fill-opacity=".7"><rect x="12" y="50" width="8" height="10"/><rect x="36" y="54" width="8" height="10"/><rect x="60" y="50" width="8" height="10"/><rect x="84" y="54" width="8" height="10"/><rect x="108" y="50" width="8" height="10"/><rect x="132" y="54" width="8" height="10"/></g></symbol>
+  <symbol id="ph-street" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#D6E4EF"/><path d="M0 6L70 40V64L0 100z" fill="#C9A27E"/><path d="M160 6L90 40V64L160 100z" fill="#B7B3AD"/><path d="M20 100L74 52H86L140 100z" fill="#8D9096"/><path d="M80 56v6M80 70v9M80 88v12" stroke="#fff" stroke-width="2"/><g fill="#fff" fill-opacity=".55"><rect x="12" y="30" width="10" height="12"/><rect x="34" y="38" width="8" height="10"/><rect x="138" y="30" width="10" height="12"/><rect x="118" y="38" width="8" height="10"/></g><g fill="#5E8B55"><circle cx="48" cy="64" r="9"/><circle cx="112" cy="64" r="9"/></g></symbol>
+ </defs>
+ <defs id="mapdefs"></defs>
+</svg>
+
+<header class="page-h light" style="background:none">
+ <h1>StreetFill: UI mockups (v1 design review)</h1>
+ <div class="meta">Prepared 15 November 2026 · Companion to <code>product-plan.md</code> · Screen numbers match the screen inventory (section 3)</div>
+ <div class="note">
+  <b>These are design mockups, not screenshots of a working app.</b> Nothing has been built. All sample data is invented to show the design: a runner based in North Center, Chicago, 8.4% of the city, 61% of North Center, the "Morning Run" of Sunday 15 November that added 9 streets, a generated lakefront loop to Montrose Beach, and friends Priya, Marcus and Jen. The same numbers are used on every screen. Maps are stylized street grids, not real geography. The frames follow iOS 26 conventions: floating glass tab bar, large titles, sheets, inset grouped lists. They are drawn at 390 × 844 points. <b>Releases:</b> S01–S15 are v1. New screens S16–S25 carry a release tag (green v1, purple v1.1) under the recommended phasing, Option B. <b>Highlight photos are illustrated placeholders</b> for real photos.
+  <div class="legend">
+   <span><svg width="26" height="8"><use href="#lg-cov"/></svg> Run (thick, solid)</span>
+   <span><svg width="26" height="8"><use href="#lg-unc"/></svg> Not yet (thin, dashed)</span>
+   <span><svg width="26" height="8"><use href="#lg-new"/></svg> New this run (blue, white centre dashes)</span>
+   <span><svg width="26" height="8"><use href="#lg-mark"/></svg> Marked by you (hollow)</span>
+   <span><svg width="26" height="8"><use href="#lg-path"/></svg> Path or trail run (dotted)</span><span><svg width="26" height="8"><use href="#lg-rn"/></svg> Generated route, new to you (green, white dots)</span><span><svg width="26" height="8"><use href="#lg-rk"/></svg> Generated route, run before (green dashes)</span>
+  </div>
+  <div style="margin-top:8px;color:#6e6e73;font-size:13px">Line styles differ in weight and dash pattern as well as colour (orange against blue against grey), so the map still reads in grayscale and for the common forms of colour blindness.</div>
+ </div>
+</header>
+
+<!-- ======================= ONBOARDING ======================= -->
+<h2 class="sec">Onboarding <small>S01–S03 · first launch to first map</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S01</b> Welcome</div>
+<div class="phone light">
+ <div style="position:absolute;top:0;left:0;right:0;height:420px"><svg class="map" data-vb="40 150 500 540" data-o="flat"></svg>
+  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(242,242,247,0) 55%,var(--bg) 100%)"></div></div>
+ <div style="position:absolute;top:372px;left:0;right:0">
+  <svg class="app" style="margin:0 0 12px 22px;width:52px;height:52px"><use href="#appicon"/></svg>
+  <div class="lt" style="font-size:36px;line-height:42px">See where you've run.<br>Run somewhere new.</div>
+  <div class="lsub" style="font-size:17px;line-height:1.4;padding-top:4px">StreetFill maps every street you've already run, then builds runs over the ones you haven't.</div>
+  <div style="padding:6px 22px 0;display:grid;gap:13px;font-size:15px">
+   <div style="display:flex;gap:12px;align-items:center"><svg class="i acc"><use href="#i-clock"/></svg><span><b>Your history, mapped in a minute.</b> No new runs needed.</span></div>
+   <div style="display:flex;gap:12px;align-items:center"><svg class="i acc"><use href="#i-check"/></svg><span><b>Runs that go somewhere new</b>, past the beach, parks and landmarks.</span></div>
+   <div style="display:flex;gap:12px;align-items:center"><svg class="i acc"><use href="#i-shield"/></svg><span><b>Routes stay on your iPhone.</b> No account.</span></div>
+  </div>
+ </div>
+ <div class="cta"><div class="btn">Get started</div></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>One screen and one button. The hero map previews the payoff. The three promises are history on first launch, discovery, and privacy.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S02</b> Apple Health explainer</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><span></span><span class="acc" style="font-size:17px">Not now</span></div>
+ <div style="display:flex;justify-content:center;margin-top:6px"><div style="width:76px;height:76px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.08)"><svg style="width:46px;height:46px"><use href="#i-heart"/></svg></div></div>
+ <div class="lt" style="text-align:center;padding-top:14px">Connect Apple Health</div>
+ <div class="lsub" style="text-align:center;font-size:16px;line-height:1.4;padding:0 30px 4px">Your Apple Watch and running apps already save each workout's route in Health. StreetFill reads those routes to find your streets.</div>
+ <div class="sec-t">StreetFill will read</div>
+ <div class="list">
+  <div class="row ind"><div class="ic" style="background:#34C759"><svg class="i s"><use href="#i-figure"/></svg></div><div class="grow">Workouts<div class="sub">Type, date, distance: running, walking, hiking</div></div></div>
+  <div class="row ind"><div class="ic" style="background:#007AFF"><svg class="i s"><use href="#i-pin"/></svg></div><div class="grow">Workout routes<div class="sub">The path your Watch or app recorded</div></div></div>
+ </div>
+ <div class="sec-t">StreetFill won't read</div>
+ <div class="list"><div class="row"><div class="grow secc" style="font-size:15px">Heart rate, sleep, or any other health data. Nothing is written to Health.</div></div></div>
+ <div class="foot" style="display:flex;gap:8px;padding-top:14px"><svg class="i s" style="color:var(--green)"><use href="#i-shield"/></svg><span>Matching happens on this iPhone against a downloaded street map. Your routes never leave the device.</span></div>
+</div>
+ <div class="cta"><div class="btn">Continue to Apple Health</div><div class="fine">Next, iOS asks you to allow access. You can change it anytime in Settings › Health › Data Access.</div></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Shown before the system Health sheet. It names exactly the two data types requested and promises that routes stay on the phone.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S03</b> Importing your history</div>
+<div class="phone light">
+ <div style="position:absolute;top:0;left:0;right:0;height:430px"><svg class="map" data-vb="70 130 470 520" data-o="partial lbl"></svg>
+  <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(242,242,247,0) 70%,var(--bg) 100%)"></div></div>
+ <div class="topbar"><div class="gcap" style="font-size:15px"><svg class="i s acc"><use href="#i-pin"/></svg>Chicago</div></div>
+ <div style="position:absolute;top:400px;left:0;right:0">
+  <div class="t2" style="padding:0 20px">Building your map…</div>
+  <div style="padding:10px 20px 0"><div style="display:flex;justify-content:space-between;font-size:15px" class="mono"><span>812 of 1,284 workouts</span><span class="secc">63%</span></div>
+   <div class="pbar" style="height:8px"><i style="width:63%"></i></div></div>
+  <div class="tiles" style="margin-top:14px"><div class="tile"><div class="n">741</div><div class="l">streets complete so far</div></div><div class="tile"><div class="n">268</div><div class="l">miles of street found</div></div></div>
+  <div class="list" style="margin-top:14px">
+   <div class="row" style="min-height:44px;font-size:15px"><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg><div class="grow">Downloaded Chicago streets <span class="secc">· 4.1 MB</span></div></div>
+   <div class="row" style="min-height:44px;font-size:15px"><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg><div class="grow">Found 1,284 workouts, 1,091 with routes</div></div>
+   <div class="row" style="min-height:44px;font-size:15px"><svg class="i s acc"><use href="#i-clock"/></svg><div class="grow">Matching routes, newest first</div></div>
+  </div>
+  <div class="fine">You can leave the app. Matching continues, and we'll let you know when your map is ready.</div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Progress with a map that fills in as it goes. Other states, described in the plan: the street download, "no workouts with routes found" (which explains the permission check), and "Chicago isn't available yet".</figcaption></figure>
+</div>
+
+<!-- ======================= CORE ======================= -->
+<h2 class="sec">Map and progress <small>S04–S08 · the three tabs</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S04</b> Map (home), light</div>
+<div class="phone light">
+ <div class="full"><svg class="map" data-vb="100 40 488 1055" data-o="lbl"></svg></div>
+ <div class="topbar"><div class="gcap">Chicago<svg class="i s"><use href="#i-chevd"/></svg></div><div class="r"><div class="gbtn"><svg class="i"><use href="#i-share"/></svg></div><div class="gbtn"><svg class="i"><use href="#i-person"/></svg></div></div></div>
+ <div class="legchip"><span><svg width="20" height="8"><use href="#lg-cov"/></svg>Run</span><span><svg width="20" height="8"><use href="#lg-unc"/></svg>Not yet</span><span><svg width="20" height="8"><use href="#lg-new"/></svg>Today</span><span><svg width="20" height="8"><use href="#lg-path"/></svg>Path</span></div>
+ <div class="attr" style="left:18px;bottom:356px">© OpenStreetMap contributors · Legal</div>
+ <div class="sheet" style="bottom:100px">
+  <div class="grab"></div>
+  <div style="display:flex;align-items:flex-end;gap:10px"><div class="big">8.4%</div><div style="padding-bottom:6px;font-size:17px;font-weight:600">of Chicago</div></div>
+  <div class="secc mono" style="font-size:15px;margin-top:6px">427 of 5,080 mi · 1,186 streets complete</div>
+  <div class="pbar" style="height:8px;margin:10px 0 6px"><i style="width:8.4%"></i></div>
+  <div class="minirow"><svg class="i s secc"><use href="#i-grid"/></svg><div style="flex:1">Neighborhoods <span class="secc">· North Center leads</span></div><b class="mono">61%</b><svg class="i s chev" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="minirow"><svg class="i s secc"><use href="#i-run"/></svg><div style="flex:1">Morning Run <span class="secc">· today</span></div><span class="nbadge">+9 streets</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+ <div class="tabs" data-sel="Map"></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Map first. The bottom sheet carries the one number that matters, and today's run is highlighted on the map. The city name opens Cities (S12) and the person button opens Settings (S13). The Neighborhoods row opens S05, now that Discover has its own tab. Dotted lines are paths and trails (the Lakefront Trail along the shore).</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S04</b> Map (home), dark</div>
+<div class="phone dark">
+ <div class="full"><svg class="map" data-vb="100 40 488 1055" data-o="lbl"></svg></div>
+ <div class="topbar"><div class="gcap">Chicago<svg class="i s"><use href="#i-chevd"/></svg></div><div class="r"><div class="gbtn"><svg class="i"><use href="#i-share"/></svg></div><div class="gbtn"><svg class="i"><use href="#i-person"/></svg></div></div></div>
+ <div class="legchip"><span><svg width="20" height="8"><use href="#lg-cov"/></svg>Run</span><span><svg width="20" height="8"><use href="#lg-unc"/></svg>Not yet</span><span><svg width="20" height="8"><use href="#lg-new"/></svg>Today</span><span><svg width="20" height="8"><use href="#lg-path"/></svg>Path</span></div>
+ <div class="attr" style="left:18px;bottom:356px">© OpenStreetMap contributors · Legal</div>
+ <div class="sheet" style="bottom:100px">
+  <div class="grab"></div>
+  <div style="display:flex;align-items:flex-end;gap:10px"><div class="big">8.4%</div><div style="padding-bottom:6px;font-size:17px;font-weight:600">of Chicago</div></div>
+  <div class="secc mono" style="font-size:15px;margin-top:6px">427 of 5,080 mi · 1,186 streets complete</div>
+  <div class="pbar" style="height:8px;margin:10px 0 6px"><i style="width:8.4%"></i></div>
+  <div class="minirow"><svg class="i s secc"><use href="#i-grid"/></svg><div style="flex:1">Neighborhoods <span class="secc">· North Center leads</span></div><b class="mono">61%</b><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="minirow"><svg class="i s secc"><use href="#i-run"/></svg><div style="flex:1">Morning Run <span class="secc">· today</span></div><span class="nbadge">+9 streets</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+ <div class="tabs" data-sel="Map"></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>The same screen in dark appearance. The basemap is muted, covered streets brighten to orange, and the dash patterns are unchanged so the legend still holds.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S05</b> Neighborhoods (from the Map sheet)</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav" style="height:44px"><div class="gbtn" style="width:40px;height:40px"><svg class="i s"><use href="#i-back"/></svg></div><div class="gbtn" style="width:40px;height:40px"><svg class="i s"><use href="#i-chevd"/></svg></div></div>
+ <div class="lt">Neighborhoods</div>
+ <div class="lsub">Chicago · 23 of 77 explored</div>
+ <div class="search"><svg class="i s"><use href="#i-search"/></svg>Search neighborhoods</div>
+ <div class="seg"><span class="on">Most run</span><span>A–Z</span><span>Recent</span></div>
+ <div class="list">
+  <div class="row"><div class="grow">North Center<div class="pbar"><i style="width:61%"></i></div></div><div class="pct">61%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Lakeview<div class="pbar"><i style="width:46%"></i></div></div><div class="pct">46%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Lincoln Square<div class="pbar"><i style="width:38%"></i></div></div><div class="pct">38%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Lincoln Park<div class="pbar"><i style="width:31%"></i></div></div><div class="pct">31%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Loop<div class="pbar"><i style="width:24%"></i></div></div><div class="pct">24%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Uptown<div class="pbar"><i style="width:22%"></i></div></div><div class="pct">22%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Avondale<div class="pbar"><i style="width:19%"></i></div></div><div class="pct">19%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Logan Square<div class="pbar"><i style="width:14%"></i></div></div><div class="pct">14%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Irving Park<div class="pbar"><i style="width:12%"></i></div></div><div class="pct">12%</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+ <div class="foot">14 more explored · 54 not started yet</div>
+</div>
+ <div class="tabs" data-sel="Map"></div>
+ <div class="homebar"></div>
+</div>
+<figcaption><b>Where Neighborhoods went:</b> it no longer has its own tab. It opens from the Map sheet's Neighborhoods row, or by swiping the sheet up, which frees a tab for Discover. A "Paths &amp; trails" section sits further down. Neighborhoods not yet entered sit in a "Not started yet" section further down. If a city has no neighborhood data, this list is replaced by a single explanation.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S06</b> Neighborhood detail</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><div class="gbtn"><svg class="i"><use href="#i-share"/></svg></div></div>
+ <div class="lt" style="padding-top:0">North Center</div>
+ <div class="mapcard" style="height:212px"><svg class="map" data-vb="150 242 276 170" data-o="flat"><rect class="hl" x="200" y="250" width="180" height="160" vector-effect="non-scaling-stroke"/></svg><div class="attr" style="right:10px;bottom:8px">© OpenStreetMap contributors</div></div>
+ <div class="tiles" style="margin-top:12px"><div class="tile"><div class="n acc">61%</div><div class="l">covered</div></div><div class="tile"><div class="n">38.2</div><div class="l">of 62.6 mi</div></div><div class="tile"><div class="n">214</div><div class="l">of 342 streets</div></div></div>
+ <div class="sec-h">Almost done</div>
+ <div class="list">
+  <div class="row"><div class="grow">N Leavitt St<div class="sub">0.1 mi left</div></div><div class="pct">92%</div></div>
+  <div class="row"><div class="grow">W Belle Plaine Ave<div class="sub">0.1 mi left</div></div><div class="pct">88%</div></div>
+  <div class="row"><div class="grow">N Hoyne Ave<div class="sub">0.3 mi left</div></div><div class="pct">81%</div></div>
+  <div class="row"><svg class="i s acc"><use href="#i-lock"/></svg><div class="grow acc">See all 128 streets left</div><span class="badge">PLUS</span></div>
+ </div>
+ <div class="sec-h">Not started</div>
+ <div class="list"><div class="row"><div class="grow">W Cuyler Ave</div><div class="val mono">0.6 mi</div></div><div class="row"><div class="grow">N Bell Ave</div><div class="val mono">0.4 mi</div></div></div>
+</div>
+ <div class="tabs" data-sel="Map"></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Percentages and the map are free. The full street lists are the Plus gate (decision D4): free users see the first 3 in each list, then a "See all" row that opens the paywall.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S07</b> Street sheet and report</div>
+<div class="phone light">
+ <div style="position:absolute;top:0;left:0;right:0;height:330px"><svg class="map" data-vb="200 250 200 170" data-o="flat"></svg></div>
+ <div class="topbar"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div></div>
+ <div class="msheet" style="top:250px;padding:10px 0 0">
+  <div class="grab"></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:0 20px">
+   <div><div class="t2">N Leavitt St</div><div class="secc" style="font-size:15px;margin-top:2px">North Center · 1.4 mi in this neighborhood</div></div>
+   <div class="gbtn" style="width:34px;height:34px;box-shadow:none;background:var(--fill)"><svg class="i s"><use href="#i-x"/></svg></div></div>
+  <div style="display:flex;align-items:baseline;gap:8px;padding:12px 20px 4px"><span class="big" style="font-size:40px">92%</span><span class="secc">run</span></div>
+  <div style="padding:0 20px"><svg viewBox="0 0 350 18" width="350" height="18"><path d="M3 9h300" stroke="var(--cov)" stroke-width="6" stroke-linecap="round"/><path d="M310 9h37" stroke="var(--unc)" stroke-width="2" stroke-dasharray="3 3"/><g stroke="var(--bg)" stroke-width="2"><path d="M60 2v14M118 2v14M176 2v14M234 2v14M292 2v14"/></g></svg>
+   <div style="display:flex;justify-content:space-between;font-size:12px" class="secc"><span>W Montrose Ave</span><span>W Irving Park Rd</span></div></div>
+  <div class="list" style="margin-top:14px">
+   <div class="row" style="font-size:15px"><div class="grow">First run</div><div class="val" style="font-size:15px">9 Mar 2023</div></div>
+   <div class="row" style="font-size:15px"><div class="grow">Runs on this street</div><div class="val" style="font-size:15px">27</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+   <div class="row" style="font-size:15px"><div class="grow">Left to run</div><div class="val" style="font-size:15px">0.1 mi, near W Irving Park Rd</div></div>
+  </div>
+  <div class="sec-t">Report a problem</div>
+  <div class="list">
+   <div class="row ind" style="font-size:16px"><svg class="i s acc"><use href="#i-check"/></svg><div class="grow">I ran this part</div></div>
+   <div class="row ind" style="font-size:16px"><svg class="i s acc"><use href="#i-x"/></svg><div class="grow">I didn't run this</div></div>
+   <div class="row ind" style="font-size:16px"><svg class="i s acc"><use href="#i-lock"/></svg><div class="grow">Not a public street</div></div>
+   <div class="row ind" style="font-size:16px"><svg class="i s acc"><use href="#i-flag"/></svg><div class="grow">Something's wrong on the map</div></div>
+  </div>
+  <div class="foot">Streets you mark show as <svg width="22" height="8" style="vertical-align:middle"><use href="#lg-mark"/></svg> "marked by you". Reports send only the street's map ID and the reason, never your route.</div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Tapping any street opens this sheet. This is where disputes are handled. Corrections survive re-matching and sync through iCloud.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S08</b> Runs</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav" style="height:44px"><span></span></div>
+ <div class="lt">Runs</div>
+ <div class="seg"><span class="on">All</span><span>With new streets</span></div>
+ <div class="sec-t">November 2026</div>
+ <div class="list">
+  <div class="row"><div class="grow">Morning Run<div class="sub">Sun 15 Nov · 6.2 mi · Apple Watch</div></div><span class="nbadge">+9</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Evening Walk<div class="sub">Fri 13 Nov · 2.1 mi · Apple Watch</div></div><span class="secc mono" style="font-size:15px">+0</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Tempo Run<div class="sub">Thu 12 Nov · 5.0 mi · Apple Watch</div></div><span class="nbadge">+3</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Indoor Run<div class="sub">Wed 11 Nov · 4.0 mi · No route recorded</div></div><svg class="i s" style="color:var(--ter)"><use href="#i-info"/></svg></div>
+  <div class="row"><div class="grow">Long Run<div class="sub">Sun 8 Nov · 12.4 mi · Apple Watch</div></div><span class="nbadge">+21</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Lakefront Run<div class="sub">Sat 7 Nov · 7.1 mi · Evanston <svg class="i xs" style="vertical-align:-1px"><use href="#i-lock"/></svg></div></div><span class="badge">PLUS</span></div>
+ </div>
+ <div class="sec-t">October 2026</div>
+ <div class="list">
+  <div class="row"><div class="grow">Morning Run<div class="sub">Sat 31 Oct · 8.0 mi · Other app</div></div><span class="nbadge">+12</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row"><div class="grow">Easy Run<div class="sub">Thu 29 Oct · 4.2 mi · Apple Watch</div></div><span class="secc mono" style="font-size:15px">+1</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+</div>
+ <div class="tabs" data-sel="Runs"></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Every workout StreetFill read, with what it added. Rows say plainly when a run has no route or falls in a locked city, so missing streets have a visible reason.</figcaption></figure>
+</div>
+
+<!-- ======================= AFTER A RUN ======================= -->
+<h2 class="sec">After a run and sharing <small>S09–S10</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S09</b> Post-run summary</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><div class="gbtn"><svg class="i"><use href="#i-share"/></svg></div></div>
+ <div class="lt" style="padding-top:0">Morning Run</div>
+ <div class="lsub">Sunday 15 Nov · 6.2 mi · 52:14 · Apple Watch</div>
+ <div class="mapcard" style="height:196px"><svg class="map" data-vb="166 232 245 144" data-o="route"></svg>
+  <div class="attr" style="left:10px;top:10px;display:flex;gap:10px;font-size:11px;color:var(--text)"><span style="display:flex;gap:4px;align-items:center"><svg width="18" height="8"><use href="#lg-new"/></svg>New</span><span style="display:flex;gap:4px;align-items:center"><svg width="18" height="8"><use href="#lg-cov"/></svg>Already run</span></div></div>
+ <div class="tiles" style="margin-top:12px"><div class="tile"><div class="n" style="color:var(--new)">9</div><div class="l">streets completed</div></div><div class="tile"><div class="n">14</div><div class="l">streets started</div></div><div class="tile"><div class="n">2.1</div><div class="l">mi of new road</div></div></div>
+ <div class="list" style="margin-top:12px">
+  <div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><span>North Center</span><span class="mono"><span class="secc">59.7% →</span> <b>61.0%</b></span></div>
+   <div class="pbar" style="height:8px;display:flex"><i style="width:59.7%;border-radius:3px 0 0 3px"></i><i style="width:1.3%;background:var(--new);border-radius:0"></i></div></div>
+  <div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><span>Chicago</span><span class="mono"><span class="secc">8.36% →</span> <b>8.41%</b></span></div>
+   <div class="pbar" style="height:8px;display:flex"><i style="width:8.36%;border-radius:3px 0 0 3px"></i><i style="width:.6%;background:var(--new);border-radius:0"></i></div></div>
+ </div>
+ <div class="sec-h" style="padding-top:16px">New streets</div>
+ <div class="list">
+  <div class="row" style="min-height:44px"><div class="grow">W Berteau Ave</div><svg class="i s" style="color:var(--new)"><use href="#i-check"/></svg></div>
+  <div class="row" style="min-height:44px"><div class="grow acc">N Oakley Ave and 7 more</div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+</div>
+ <div style="position:absolute;left:0;right:0;bottom:30px;z-index:5"><div class="btn" style="box-shadow:0 6px 18px rgba(210,79,40,.35)"><svg class="i s"><use href="#i-share"/></svg>Share this run</div></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Opened from the notification. The before→after bars show the run's contribution as a blue segment. With zero new streets, the screen says so and names the nearest unfinished street.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S10</b> Share card</div>
+<div class="phone light">
+ <div class="dim" style="background:rgba(0,0,0,.4)"></div>
+ <div class="msheet" style="top:58px;padding-top:8px">
+  <div class="grab"></div>
+  <div class="nav" style="height:40px"><div class="gbtn" style="width:34px;height:34px;box-shadow:none;background:var(--fill)"><svg class="i s"><use href="#i-x"/></svg></div><div class="ttl">Share</div><span></span></div>
+  <div style="margin:8px auto 0;width:310px;height:310px;border-radius:26px;overflow:hidden;position:relative;background:#0F1A2F;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);--cov:#FF8A5C;--unc:#3A4865;--new:#FF8A5C">
+   <div style="position:absolute;inset:0 0 92px 0"><svg class="map" data-vb="172 246 236 150" data-o="card flat"></svg></div>
+   <div style="position:absolute;left:20px;right:20px;bottom:16px">
+    <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:46px;font-weight:800;letter-spacing:-.04em">61%</span><span style="font-size:16px;font-weight:600;opacity:.9">of North Center run</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin-top:2px"><span>Chicago · 427 mi of streets</span><span style="font-weight:700;letter-spacing:.04em">STREETFILL</span></div>
+    <div style="font-size:8px;opacity:.45;margin-top:4px">Map data © OpenStreetMap contributors</div>
+   </div>
+  </div>
+  <div class="seg" style="margin-top:18px"><span>This run</span><span class="on">Neighborhood</span><span>City</span></div>
+  <div class="seg" style="margin-top:0;display:flex;gap:0"><span class="on">Square</span><span>Story</span><span>Light</span><span class="on" style="margin-left:2px">Dark</span></div>
+  <div class="list"><div class="row" style="font-size:16px"><div class="grow">Show date</div><div class="toggle off"></div></div></div>
+  <div class="foot">Shows covered streets only, never a single run's route. Streets near home can still hint at where you live.</div>
+  <div style="margin-top:14px"><div class="btn"><svg class="i s"><use href="#i-share"/></svg>Share…</div></div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>The card is drawn on the phone with no basemap or home marker. The scope defaults to the screen it was opened from. "Share…" opens the standard iOS share sheet. Share cards are always free.</figcaption></figure>
+</div>
+
+<!-- ======================= UPGRADE & SETTINGS ======================= -->
+<h2 class="sec">Upgrade, cities and settings <small>S11–S13</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S11</b> Paywall (StreetFill Plus)</div>
+<div class="phone light">
+ <div class="dim" style="background:rgba(0,0,0,.4)"></div>
+ <div class="msheet" style="top:58px;overflow:hidden">
+  <div style="height:220px;position:relative"><svg class="map" data-vb="330 40 230 130" data-o="flat"></svg>
+   <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(242,242,247,0) 45%,var(--bg) 100%)"></div>
+   <div class="gbtn" style="position:absolute;top:14px;right:16px;width:34px;height:34px"><svg class="i s"><use href="#i-x"/></svg></div>
+   <div style="position:absolute;top:14px;left:16px" class="gcap"><svg class="i s acc"><use href="#i-lock"/></svg><span style="font-size:15px">Evanston</span></div></div>
+  <div class="lt" style="padding-top:0;text-align:center">Unlock Evanston</div>
+  <div class="lsub" style="text-align:center;font-size:17px">You've already run <b style="color:var(--text)">31%</b> of it, across 12 runs.</div>
+  <div class="list" style="margin-top:8px">
+   <div class="row ind" style="font-size:16px"><div class="ic" style="background:var(--accent)"><svg class="i s"><use href="#i-pin"/></svg></div><div class="grow">Every available city<div class="sub">Evanston and Oak Park are in your history now</div></div></div>
+   <div class="row ind" style="font-size:16px"><div class="ic" style="background:#007AFF"><svg class="i s"><use href="#i-grid"/></svg></div><div class="grow">Unlimited Discover runs<div class="sub">In every city, plus full street lists</div></div></div>
+   <div class="row ind" style="font-size:16px"><div class="ic" style="background:#34C759"><svg class="i s"><use href="#i-heart" style="filter:brightness(10)"/></svg></div><div class="grow">Chicago stays free<div class="sub">History, map, share cards, 3 runs a week</div></div></div>
+  </div>
+  <div style="margin:18px 16px 0;border-radius:22px;border:2px solid var(--accent);background:var(--card);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+   <div><div style="font-weight:600;font-size:17px">StreetFill Plus · Yearly</div><div class="secc" style="font-size:14px">1 week free, then $29.99/year</div></div>
+   <div style="width:24px;height:24px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg class="i xs"><use href="#i-check"/></svg></div></div>
+  <div style="margin-top:16px"><div class="btn">Start free week</div></div>
+  <div class="fine" style="margin-top:10px">Cancel anytime in Settings at least a day before the trial ends.<br><span class="acc">Restore Purchases</span> · <span class="acc">Terms</span> · <span class="acc">Privacy</span></div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Shown only in context, here after tapping a locked city in S12. It lists only features in this build (guideline 3.1.2), with no "coming soon" items. It never appears during onboarding.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S12</b> Cities (adding a second city)</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><span></span><div class="ttl"></div><span class="acc" style="font-weight:600;font-size:17px">Done</span></div>
+ <div class="lt" style="padding-top:0">Cities</div>
+ <div class="sec-t">Home city · free</div>
+ <div class="list"><div class="row"><svg class="i acc"><use href="#i-pin"/></svg><div class="grow">Chicago<div class="pbar"><i style="width:8.4%"></i></div></div><div class="pct">8.4%</div><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg></div></div>
+ <div class="sec-t">Found in your runs</div>
+ <div class="list">
+  <div class="row"><div class="grow">Evanston<div class="sub">12 runs · map locked</div></div><div class="pct secc">31%</div><span class="badge">PLUS</span></div>
+  <div class="row"><div class="grow">Oak Park<div class="sub">5 runs · map locked</div></div><div class="pct secc">9%</div><span class="badge">PLUS</span></div>
+  <div class="row"><div class="grow">Milwaukee<div class="sub">3 runs · not available yet</div></div><span class="acc" style="font-size:15px;display:flex;gap:4px;align-items:center"><svg class="i s"><use href="#i-bell"/></svg>Notify me</span></div>
+  <div class="row"><div class="grow">Boston<div class="sub">2 runs · not available yet</div></div><span class="acc" style="font-size:15px;display:flex;gap:4px;align-items:center"><svg class="i s"><use href="#i-bell"/></svg>Notify me</span></div>
+ </div>
+ <div class="foot">The percentages are worked out on your iPhone from runs you already have. Plus unlocks every available city.</div>
+ <div class="sec-t">Add a city</div>
+ <div class="search" style="background:var(--card)"><svg class="i s"><use href="#i-search"/></svg>Search cities</div>
+ <div class="foot">New cities are added each month. Map data comes from OpenStreetMap.</div>
+</div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Opened from the city name on S04. Teaser percentages for cities already in the user's history are the main upgrade hook (flow 4.5). Unsupported cities offer "Notify me", which tells the owner which city packs to build next.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S13</b> Settings and data sources</div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><span></span><span class="acc" style="font-weight:600;font-size:17px">Done</span></div>
+ <div class="lt" style="padding-top:0">Settings</div>
+ <div class="list"><div class="row ind"><svg class="app" style="width:30px;height:30px"><use href="#appicon"/></svg><div class="grow">StreetFill Plus<div class="sub">Free plan · Chicago</div></div><span class="acc" style="font-size:15px">Upgrade</span></div></div>
+ <div class="sec-t">Data sources</div>
+ <div class="list">
+  <div class="row ind"><div class="ic" style="background:#fff;box-shadow:inset 0 0 0 .5px var(--sep)"><svg class="i s"><use href="#i-heart"/></svg></div><div class="grow">Apple Health</div><span style="color:var(--green);font-size:15px">Connected</span></div>
+  <div class="row ind" style="font-size:15px"><div style="width:30px"></div><div class="grow">Workouts read</div><span class="val mono" style="font-size:15px">1,284</span></div>
+  <div class="row ind" style="font-size:15px"><div style="width:30px"></div><div class="grow">With routes</div><span class="val mono" style="font-size:15px">1,091</span></div>
+  <div class="row ind" style="font-size:15px"><div style="width:30px"></div><div class="grow">Sources<div class="sub">Apple Watch 1,203 · Other apps 81</div></div><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+ <div class="sec-t">Counting</div>
+ <div class="list">
+  <div class="row" style="font-size:16px"><div class="grow">Running</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">Walking</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">Hiking</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">Units</div><span class="val">Miles</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+ </div>
+ <div class="sec-t">Discover &amp; location</div>
+ <div class="list">
+  <div class="row" style="font-size:16px"><div class="grow">Location<div class="sub">Only when you ask · never in background</div></div><span class="val" style="font-size:15px">While using</span></div>
+  <div class="row" style="font-size:16px"><div class="grow">Street-level previews<div class="sub">Uses Apple Look Around</div></div><div class="toggle"></div></div>
+ </div>
+ <div class="sec-t">iCloud &amp; your data</div>
+ <div class="list">
+  <div class="row ind" style="font-size:16px"><div class="ic" style="background:#007AFF"><svg class="i s"><use href="#i-cloud"/></svg></div><div class="grow">Sync settings &amp; corrections</div><div class="toggle"></div></div>
+  <div class="row ind" style="font-size:16px"><div class="ic" style="background:#8E8E93"><svg class="i s"><use href="#i-down"/></svg></div><div class="grow">Export my streets (GeoJSON)</div></div>
+  <div class="row ind" style="font-size:16px;color:#FF3B30"><div class="ic" style="background:#FF3B30"><svg class="i s"><use href="#i-trash"/></svg></div><div class="grow">Delete all StreetFill data</div></div>
+ </div>
+ <div class="foot">Your runs and coverage are rebuilt from Apple Health on each device. They are not stored in iCloud. Map data, notifications, Privacy Policy and credits (OpenStreetMap, photo authors) appear further down.</div>
+</div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Trust and control. It shows how many workouts lack routes (the most likely cause of "missing" streets), what counts, the map data version, the iCloud scope, export and delete.</figcaption></figure>
+</div>
+
+<!-- ======================= SYSTEM SURFACES ======================= -->
+<h2 class="sec">System surfaces <small>S14–S15</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S14</b> Post-run notification (Lock Screen)</div>
+<div class="phone dark" data-sb="w" style="background:linear-gradient(165deg,#22305C 0%,#4E3F7E 42%,#B8607A 74%,#E9946A 100%)">
+ <div style="position:absolute;top:96px;left:0;right:0;text-align:center;color:#fff">
+  <div style="font-size:21px;font-weight:600;opacity:.9">Sunday, 15 November</div>
+  <div style="font-size:104px;font-weight:700;letter-spacing:-3px;line-height:1.02;opacity:.95">9:41</div></div>
+ <div style="position:absolute;left:12px;right:12px;top:520px;border-radius:26px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start;
+  background:rgba(255,255,255,.42);backdrop-filter:blur(30px) saturate(160%);-webkit-backdrop-filter:blur(30px) saturate(160%);color:#000;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5)">
+  <svg style="width:38px;height:38px;flex:none"><use href="#appicon"/></svg>
+  <div style="flex:1;min-width:0;font-size:15px;line-height:1.3">
+   <div style="display:flex;justify-content:space-between"><b>StreetFill</b><span style="opacity:.55;font-size:13px">now</span></div>
+   <div style="font-weight:600">9 new streets on your Morning Run</div>
+   <div>North Center is now 61%. Chicago 8.4%.</div></div>
+  <div class="light" style="width:46px;height:46px;border-radius:10px;overflow:hidden;flex:none;align-self:center"><svg class="map" data-vb="206 240 166 150" data-o=""></svg></div>
+ </div>
+ <div style="position:absolute;bottom:56px;left:46px;right:46px;display:flex;justify-content:space-between">
+  <div style="width:50px;height:50px;border-radius:25px;background:rgba(0,0,0,.28);backdrop-filter:blur(10px)"></div><div style="width:50px;height:50px;border-radius:25px;background:rgba(0,0,0,.28);backdrop-filter:blur(10px)"></div></div>
+ <div class="homebar" style="background:#fff"></div>
+</div>
+<figcaption>A local notification posted after background matching. There is no server push. The map thumbnail is an optional attachment, first on the cut list. Users can choose "only runs with new streets" or off.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S15</b> Home Screen widgets</div>
+<div class="phone dark" data-sb="w" style="background:linear-gradient(170deg,#1F3B57 0%,#2E5872 45%,#4F7F8A 100%)">
+ <div style="position:absolute;top:70px;left:26px;width:338px;height:158px;border-radius:24px;background:var(--card);display:flex;overflow:hidden;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2)" class="dark">
+  <div style="flex:1;padding:14px 4px 14px 16px;display:flex;flex-direction:column">
+   <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent)">CHICAGO</div>
+   <div style="font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.05" class="mono">8.4%</div>
+   <div style="font-size:13px;opacity:.75;margin-top:2px">North Center 61%</div>
+   <div style="margin-top:auto"><span class="nbadge">+9 streets today</span></div></div>
+  <div style="width:150px;height:158px"><svg class="map" data-vb="214 246 156 164" data-o=""></svg></div>
+ </div>
+ <div style="position:absolute;top:248px;left:26px;width:158px;height:158px;border-radius:24px;padding:14px;background:#fff;color:#000;box-shadow:0 4px 14px rgba(0,0,0,.2)" class="light">
+  <svg viewBox="0 0 64 64" width="70" height="70"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--fill)" stroke-width="8"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--cov)" stroke-width="8" stroke-linecap="round" stroke-dasharray="99.7 163.4" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#000">61%</text></svg>
+  <div style="font-size:15px;font-weight:600;margin-top:8px">North Center</div>
+  <div style="font-size:12px;color:var(--sec)">Chicago 8.4%</div></div>
+ <div style="position:absolute;top:248px;left:206px;display:grid;grid-template-columns:64px 64px;gap:26px 30px">
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:linear-gradient(#3EC1F0,#1C86E0)"></div>Weather</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:#111;box-shadow:inset 0 0 0 2px #A4F23B"></div>Fitness</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><svg style="width:64px;height:64px;display:block"><use href="#appicon"/></svg>StreetFill</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:#fff;display:flex;align-items:center;justify-content:center"><svg style="width:38px;height:38px"><use href="#i-heart"/></svg></div>Health</div>
+ </div>
+ <div style="position:absolute;top:440px;left:26px;right:26px;display:flex;justify-content:space-between">
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:linear-gradient(#FFD34D,#F5A623)"></div>Notes</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:linear-gradient(#69E06F,#2DBE4E)"></div>Maps</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:#F2F2F7"></div>Photos</div>
+  <div style="text-align:center;color:#fff;font-size:11px"><div style="width:64px;height:64px;border-radius:15px;background:#8E8E93"></div>Settings</div>
+ </div>
+ <div style="position:absolute;left:14px;right:14px;bottom:26px;height:92px;border-radius:34px;background:rgba(255,255,255,.22);backdrop-filter:blur(20px);display:flex;justify-content:space-around;align-items:center">
+  <div style="width:62px;height:62px;border-radius:15px;background:#34C759"></div><div style="width:62px;height:62px;border-radius:15px;background:#fff"></div><div style="width:62px;height:62px;border-radius:15px;background:#30C85E"></div><div style="width:62px;height:62px;border-radius:15px;background:#FA2D48"></div></div>
+ <div class="homebar" style="background:#fff"></div>
+</div>
+<figcaption>Medium widget (dark appearance): city percentage, top neighborhood, mini-map and today's gain. Small widget (light appearance): a ring for the home neighborhood. Both read a summary the app writes after each run.</figcaption></figure>
+</div>
+
+<!-- ======================= DISCOVER ======================= -->
+<h2 class="sec">Discover <small>S16–S20 · v1 under Option B · runs over streets that are new to you</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S16</b> Discover <span class="rel">v1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav" style="height:40px"><span></span><span class="secc" style="font-size:13px">2 of 3 free runs left this week</span></div>
+ <div class="lt" style="padding-bottom:10px">Discover</div>
+ <div class="list" style="margin-bottom:8px">
+  <div class="row"><div style="width:48px;height:48px;border-radius:12px;overflow:hidden;flex:none"><svg class="map" data-vb="258 296 60 60" data-o="flat"></svg></div><div class="grow">Start<div class="sub">Usual start · near N Damen Ave</div></div><span class="acc" style="font-size:15px">Change</span></div>
+  <div class="row" style="font-size:16px;min-height:44px"><svg class="i s acc"><use href="#i-loc"/></svg><div class="grow acc">Use my location</div></div>
+ </div>
+ <div class="ctl"><div class="lab"><span>Distance</span><span class="mono">5.0 mi</span></div><div class="sl"><div class="trk"><i style="width:22%"></i></div><div class="knob" style="left:22%"></div></div><div class="seg" style="margin:6px 0 0"><span class="on">Loop</span><span>Out &amp; back</span></div></div>
+ <div class="ctl"><div class="lab"><span>Terrain</span><span class="secc" style="font-weight:500">Rolling</span></div><div class="sl"><div class="trk"><i style="width:50%"></i></div><div class="knob" style="left:50%"></div></div><div class="tick"><span>Flat</span><span>Rolling</span><span>Hilly</span></div>
+  <div class="lab" style="margin-top:12px"><span>New to me</span><span class="mono" style="color:var(--sugg)">60%</span></div><div class="sl"><div class="trk"><i style="width:60%;background:var(--sugg)"></i></div><div class="knob" style="left:60%"></div></div></div>
+ <div class="ctl"><div class="lab" style="margin-bottom:8px"><span>Scenery</span></div><div class="chips"><span class="chip on"><svg class="i xs"><use href="#i-wave"/></svg>Water &amp; beaches</span><span class="chip"><svg class="i xs"><use href="#i-tree"/></svg>Parks</span><span class="chip on"><svg class="i xs"><use href="#i-star"/></svg>Landmarks</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:15px;font-weight:600">Quiet streets<div class="toggle"></div></div></div>
+</div>
+ <div style="position:absolute;left:0;right:0;bottom:98px;z-index:5"><div class="btn" style="box-shadow:0 6px 18px rgba(210,79,40,.35)">Find runs</div></div>
+ <div class="tabs" data-sel="Discover"></div><div class="homebar"></div>
+</div>
+<figcaption>Discover replaces Neighborhoods in the tab bar. The start defaults to one of the runner's usual starts, worked out from their own workouts on the phone, so no location permission is needed unless they tap "Use my location". Terrain and scenery controls are standard in rival generators. The "New to me" slider is what makes StreetFill different.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S17</b> Route options <span class="rel">v1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><div class="ttl">3 runs from your start</div><div class="gbtn"><svg class="i"><use href="#i-refresh"/></svg></div></div>
+ <div class="lsub" style="padding-top:4px">5 mi loop · Rolling · 60% new · Waterfront, Landmarks</div>
+ <div class="rcard"><div class="mm"><svg class="map" data-vb="280 75 260 347" data-o="flat r1 pins1"></svg></div>
+  <div style="flex:1;min-width:0"><div class="rn-t">Lakefront to Montrose Beach</div><div class="secc mono" style="font-size:14px;margin-top:3px">5.1 mi · +40 ft</div>
+   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><span class="gbadge">38% new</span><span class="badge" style="background:var(--fill);color:var(--text)">+2.4% Uptown</span></div>
+   <div style="display:flex;gap:5px;margin-top:9px"><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-beach"/></svg></div><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-hill"/></svg></div><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-cem"/></svg></div></div>
+   <div class="secc" style="font-size:12px;margin-top:5px">Montrose Beach, Cricket Hill, Graceland Cemetery +1</div></div></div>
+ <div class="rcard"><div class="mm"><svg class="map" data-vb="88 258 220 293" data-o="flat r2 pins2"></svg></div>
+  <div style="flex:1;min-width:0"><div class="rn-t">Avondale and the river</div><div class="secc mono" style="font-size:14px;margin-top:3px">5.0 mi · +15 ft</div>
+   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><span class="gbadge">71% new</span><span class="badge" style="background:var(--fill);color:var(--text)">+3.1% Avondale</span><span class="badge" style="background:var(--fill);color:var(--text)">New: Hermosa</span></div>
+   <div style="display:flex;gap:5px;margin-top:9px"><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-park"/></svg></div><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-river"/></svg></div></div>
+   <div class="secc" style="font-size:12px;margin-top:5px">Horner Park, North Branch riverwalk</div></div></div>
+ <div class="rcard"><div class="mm"><svg class="map" data-vb="269 208 200 267" data-o="flat r3 pins3"></svg></div>
+  <div style="flex:1;min-width:0"><div class="rn-t">Wrigley side streets</div><div class="secc mono" style="font-size:14px;margin-top:3px">4.9 mi · +20 ft</div>
+   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><span class="gbadge">44% new</span><span class="badge" style="background:var(--fill);color:var(--text)">+1.2% Lakeview</span></div>
+   <div style="display:flex;gap:5px;margin-top:9px"><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-stadium"/></svg></div><div class="ph" style="width:56px;height:44px"><svg><use href="#ph-terrace"/></svg></div></div>
+   <div class="secc" style="font-size:12px;margin-top:5px">Wrigley Field, Alta Vista Terrace</div></div></div>
+ <div class="fine" style="margin-top:2px">Thumbnails are placeholders for real photos · Chicago is flat: the hilliest option nearby gains about 120 ft</div>
+</div><div class="homebar"></div></div>
+<figcaption>Three options that overlap by less than 40%. Each shows distance, elevation gain, share of the route that is new, neighborhood gains (including any neighborhood never run, here Hermosa), and the highlights it passes. When a preference can't be met, the screen says so plainly instead of pretending.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S18</b> Route detail <span class="rel">v1</span></div>
+<div class="phone light">
+ <div style="position:absolute;top:0;left:0;right:0;height:262px"><svg class="map" data-vb="262 140 300 202" data-o="flat r1 pins1"></svg></div>
+ <div class="topbar"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><div class="r"><div class="gbtn"><svg class="i"><use href="#i-bookmark"/></svg></div><div class="gbtn"><svg class="i"><use href="#i-share"/></svg></div></div></div>
+ <div class="legchip" style="top:220px"><span><svg width="20" height="8"><use href="#lg-rn"/></svg>New to you</span><span><svg width="20" height="8"><use href="#lg-rk"/></svg>Run before</span></div>
+ <div style="position:absolute;top:262px;left:0;right:0;bottom:0;background:var(--bg);border-radius:30px 30px 0 0;padding-top:14px">
+  <div class="t2" style="padding:0 20px">Lakefront to Montrose Beach</div>
+  <div class="secc" style="font-size:14px;padding:2px 20px 10px">Loop from your usual start · Lakeview, Uptown</div>
+  <div class="tiles"><div class="tile" style="padding:9px 12px"><div class="n" style="font-size:24px">5.1</div><div class="l">miles</div></div><div class="tile" style="padding:9px 12px"><div class="n" style="font-size:24px">+40</div><div class="l">ft climb</div></div><div class="tile" style="padding:9px 12px"><div class="n" style="font-size:24px;color:var(--sugg)">38%</div><div class="l">new · 22 streets</div></div></div>
+  <div class="sec-h" style="padding:14px 20px 8px;font-size:18px">Highlights</div>
+  <div style="display:flex;gap:10px;padding-left:16px;overflow:hidden">
+   <div><div class="ph" style="width:118px;height:84px"><svg><use href="#ph-cem"/></svg><span class="num">1</span><span class="phl">PLACEHOLDER</span></div><div class="hn">Graceland Cemetery<br><span>mi 0.9</span></div></div>
+   <div><div class="ph" style="width:118px;height:84px"><svg><use href="#ph-hill"/></svg><span class="num">2</span><span class="phl">PLACEHOLDER</span></div><div class="hn">Cricket Hill<br><span>mi 2.0</span></div></div>
+   <div><div class="ph" style="width:118px;height:84px"><svg><use href="#ph-beach"/></svg><span class="num">3</span><span class="phl">PLACEHOLDER</span></div><div class="hn">Montrose Beach<br><span>mi 2.4</span></div></div>
+   <div><div class="ph" style="width:118px;height:84px"><svg><use href="#ph-hedge"/></svg><span class="num">4</span></div><div class="hn">Magic Hedge<br><span>mi 2.6</span></div></div>
+  </div>
+  <div class="list" style="margin-top:12px;padding:10px 14px 6px;border-radius:20px">
+   <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Elevation</span><span class="secc">+40 ft · lowest at the beach</span></div>
+   <svg viewBox="0 0 360 84" width="100%" height="76"><path d="M10 45L40 48L70 53L100 59L120 64L135 45L143 10L152 45L170 74L183 72L220 64L260 54L300 48L350 45V80H10Z" fill="var(--sugg)" fill-opacity=".14"/><path d="M10 45L40 48L70 53L100 59L120 64L135 45L143 10L152 45L170 74L183 72L220 64L260 54L300 48L350 45" fill="none" stroke="var(--sugg)" stroke-width="2"/>
+    <g font-size="9" font-weight="700" fill="var(--sugg)" text-anchor="middle"><circle cx="70" cy="53" r="7" fill="#fff" stroke="var(--sugg)" stroke-width="1.6"/><text x="70" y="56">1</text><circle cx="143" cy="10" r="7" fill="#fff" stroke="var(--sugg)" stroke-width="1.6"/><text x="143" y="13">2</text><circle cx="170" cy="74" r="7" fill="#fff" stroke="var(--sugg)" stroke-width="1.6"/><text x="170" y="77">3</text><circle cx="190" cy="71" r="7" fill="#fff" stroke="var(--sugg)" stroke-width="1.6"/><text x="190" y="74">4</text></g>
+    <g font-size="9" fill="var(--sec)"><text x="10" y="83">0</text><text x="335" y="83">5.1 mi</text></g></svg>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:34px;display:flex;gap:10px;padding:0 20px"><div class="btn" style="margin:0;flex:1;background:var(--sugg)">Start</div><div class="btn tinted" style="margin:0;width:120px"><svg class="i s"><use href="#i-bookmark"/></svg>Save</div></div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>New parts of the route are a solid green line with white dots; parts run before are green dashes. Numbered highlights match the photo strip and the elevation profile. Cricket Hill gives this flat route its only climb.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S19</b> Highlight card <span class="rel">v1</span></div>
+<div class="phone light">
+ <div style="position:absolute;top:0;left:0;right:0;height:230px"><svg class="map" data-vb="262 120 300 177" data-o="flat r1 pins1"></svg></div>
+ <div class="dim" style="background:rgba(0,0,0,.18)"></div>
+ <div class="msheet" style="top:150px;padding:8px 0 0">
+  <div class="grab"></div>
+  <div class="ph" style="margin:0 16px;height:172px;border-radius:22px"><svg><use href="#ph-beach"/></svg><span class="phl" style="font-size:10px">PLACEHOLDER FOR A REAL PHOTO</span>
+   <div class="gbtn" style="position:absolute;top:10px;right:10px;width:32px;height:32px"><svg class="i s"><use href="#i-x"/></svg></div></div>
+  <div class="secc" style="font-size:11px;padding:5px 22px 0">Photo: author name · CC BY-SA 4.0 · Wikimedia Commons (example credit format)</div>
+  <div style="padding:10px 20px 0;display:flex;justify-content:space-between;align-items:flex-start"><div><div class="t2">Montrose Beach</div><div class="secc" style="font-size:15px">Beach · Uptown</div></div><span class="num" style="position:static;width:26px;height:26px;border-radius:13px;background:var(--sugg);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">3</span></div>
+  <div style="padding:8px 20px 0;font-size:15px;line-height:1.4">Public beach on Lake Michigan at Montrose Point, next to the Magic Hedge.</div>
+  <div class="list" style="margin-top:12px">
+   <div class="row" style="font-size:15px;min-height:46px"><div class="grow">On this route</div><span class="val" style="font-size:15px">Mile 2.4 · short spur</span></div>
+   <div class="row" style="font-size:15px;min-height:46px"><div class="grow">Next highlight</div><span class="val" style="font-size:15px">Magic Hedge · 0.2 mi</span></div>
+  </div>
+  <div class="ph" style="margin:12px 16px 0;height:84px;border-radius:18px"><svg><use href="#ph-street"/></svg><span class="phl" style="font-size:10px">LOOK AROUND PREVIEW · PLACEHOLDER</span>
+   <div class="gcap" style="position:absolute;right:10px;top:22px;height:38px;font-size:15px"><svg class="i s"><use href="#i-eye"/></svg>Street view</div></div>
+  <div style="margin-top:12px"><div class="btn tinted"><svg class="i s"><use href="#i-bookmark"/></svg>Add to Want to run</div></div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Image sources in order: a freely licensed photo with author and licence shown; an Apple Look Around snapshot; an illustrated placeholder. Look Around is fetched only on this screen and on route detail, and can be switched off.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S20</b> Start route <span class="rel">v1</span></div>
+<div class="phone light">
+ <div class="full"><svg class="map" data-vb="270 80 279 603" data-o="flat r1 pins1 dot"></svg></div>
+ <div class="topbar"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div></div>
+ <div class="msheet" style="top:478px;padding:8px 0 0">
+  <div class="grab"></div>
+  <div class="t2" style="padding:0 20px 10px">Start this run</div>
+  <div class="list">
+   <div class="row ind"><div class="ic" style="background:#0A84FF"><svg class="i s"><use href="#i-loc"/></svg></div><div class="grow">Follow in StreetFill<div class="sub">Your position on the route while the app is open</div></div><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg></div>
+   <div class="row ind"><div class="ic" style="background:#8E8E93"><svg class="i s"><use href="#i-down"/></svg></div><div class="grow">Export GPX<div class="sub">Open in a watch or running app</div></div></div>
+  </div>
+  <div class="foot">Record with Apple Watch or your usual app as always. New streets are credited from the finished workout. Routes come from map data, so use your judgement about traffic and safety.</div>
+  <div style="margin-top:12px"><div class="btn" style="background:var(--sugg)">Follow in StreetFill</div></div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Location is asked for only here, when the runner chooses to follow, and only while the app is in use. Never in the background, and it never leaves the phone. GPX export needs no permission. Apple Maps hand-off is left out because Maps would re-plan the route. Sending a route to Apple Watch is unverified.</figcaption></figure>
+</div>
+
+<!-- ======================= FRIENDS ======================= -->
+<h2 class="sec">Friends <small>S21–S25 · v1.1 under Option B · friends-only, area-level by default</small></h2>
+<div class="grid">
+
+<figure class="shot"><div class="cap-top"><b>S21</b> Sign in for Friends <span class="v11">v1.1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav" style="height:44px"><span></span><span class="acc" style="font-size:17px">Not now</span></div>
+ <div style="display:flex;justify-content:center;margin:4px 0 6px"><div class="av" style="width:58px;height:58px;border-radius:29px;font-size:20px;background:#7B5BD6;box-shadow:0 0 0 3px var(--bg)">P</div><div class="av" style="width:58px;height:58px;border-radius:29px;font-size:18px;background:var(--accent);margin-left:-14px;box-shadow:0 0 0 3px var(--bg);z-index:1">You</div><div class="av" style="width:58px;height:58px;border-radius:29px;font-size:20px;background:#2E9BB7;margin-left:-14px;box-shadow:0 0 0 3px var(--bg)">M</div></div>
+ <div class="lt" style="text-align:center">Run with friends</div>
+ <div class="lsub" style="text-align:center;font-size:16px;line-height:1.35;padding:0 28px 2px">Compare the neighborhoods you've each run, see who explored more this month, and cheer new areas.</div>
+ <div class="sec-t">Friends see</div>
+ <div class="list">
+  <div class="row" style="font-size:15px;min-height:42px"><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg><div class="grow">Neighborhood and city percentages</div></div>
+  <div class="row" style="font-size:15px;min-height:42px"><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg><div class="grow">New streets this week and month</div></div>
+  <div class="row" style="font-size:15px;min-height:42px"><svg class="i s" style="color:var(--green)"><use href="#i-check"/></svg><div class="grow">New areas you reach, posted once a day</div></div>
+ </div>
+ <div class="sec-t">Friends never see</div>
+ <div class="list"><div class="row" style="font-size:15px"><svg class="i s" style="color:#FF3B30"><use href="#i-x"/></svg><div class="grow">Your routes or any GPS point, run times, pace or heart rate, or your home zone</div></div></div>
+ <div class="list" style="margin-top:12px"><div class="row" style="font-size:15px"><div class="grow">Share area summaries from my Apple Health workouts with friends I add<div class="sub">Turn off anytime; summaries are then deleted</div></div><div class="toggle"></div></div></div>
+</div>
+ <div class="cta"><div class="btn" style="background:#000">Sign in with Apple</div><div class="fine" style="margin-top:8px">Adults only for now. Delete your account anytime in Settings.</div></div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Accounts arrive with Friends. The consent toggle for sharing data derived from Apple Health is explicit and separate, and nothing is uploaded until it is on. The age gate follows decision D17.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S22</b> Friends home <span class="v11">v1.1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav" style="height:44px"><span></span><div class="gbtn" style="width:40px;height:40px"><svg class="i s"><use href="#i-addp"/></svg></div></div>
+ <div class="lt">Friends</div>
+ <div class="list">
+  <div class="row" style="min-height:46px;gap:8px"><span class="chip" style="height:30px;font-size:13px">Chicago<svg class="i xs"><use href="#i-chevd"/></svg></span><span class="chip" style="height:30px;font-size:13px">New streets · November<svg class="i xs"><use href="#i-chevd"/></svg></span></div>
+  <div class="row"><b class="mono" style="width:16px">1</b><div class="av" style="background:#7B5BD6">P</div><div class="grow">Priya</div><span class="pct">64</span></div>
+  <div class="row" style="background:var(--tint)"><b class="mono" style="width:16px">2</b><div class="av" style="background:var(--accent);font-size:11px">You</div><div class="grow"><b>You</b></div><span class="pct">41</span></div>
+  <div class="row"><b class="mono" style="width:16px">3</b><div class="av" style="background:#2E9BB7">M</div><div class="grow">Marcus</div><span class="pct">37</span></div>
+  <div class="row"><b class="mono" style="width:16px">4</b><div class="av" style="background:#E0A030">J</div><div class="grow">Jen</div><span class="pct">22</span></div>
+ </div>
+ <div class="sec-h" style="padding-top:16px">Feed</div>
+ <div class="list">
+  <div class="row"><div class="av" style="background:#7B5BD6">P</div><div class="grow" style="font-size:15px"><b>Priya</b> reached <b>Rogers Park</b><div class="sub">New neighborhood · Yesterday</div></div><span class="cheer">Cheer</span></div>
+  <div class="row"><div class="av" style="background:#2E9BB7">M</div><div class="grow" style="font-size:15px"><b>Marcus</b> passed 25% of <b>Logan Square</b><div class="sub">Fri 13 Nov</div></div><span class="cheer">Cheer</span></div>
+  <div class="row"><div class="av" style="background:#E0A030">J</div><div class="grow" style="font-size:15px"><b>Jen</b> finished the <b>Lakefront Trail</b><div class="sub">Trail complete · Thu 12 Nov</div></div><span class="cheer" style="background:var(--fill);color:var(--sec)">Cheered</span></div>
+ </div>
+</div>
+ <div class="tabs" data-f data-sel="Friends"></div><div class="homebar"></div>
+</div>
+<figcaption>A fourth tab arrives in v1.1: Map, Discover, Friends, Runs. The leaderboard is friends only, by city or neighborhood, ranked by percentage or by new streets this week or month. The feed is posted once a day, carries dates only, and has cheers but no comments, so there is no free text to moderate.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S23</b> Compare with a friend <span class="v11">v1.1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><span></span></div>
+ <div class="lt" style="padding-top:0">You &amp; Priya</div>
+ <div class="lsub mono">Chicago · you 8.4% · Priya 11.2%</div>
+ <svg viewBox="0 0 358 118" width="358" height="118" style="display:block;margin:0 16px">
+  <circle cx="135" cy="58" r="54" fill="var(--cov)" fill-opacity=".14" stroke="var(--cov)" stroke-width="2"/>
+  <circle cx="223" cy="58" r="54" fill="#7B5BD6" fill-opacity=".14" stroke="#7B5BD6" stroke-width="2" stroke-dasharray="6 4"/>
+  <g text-anchor="middle" font-weight="700" font-size="26"><text x="105" y="62" fill="var(--cov)">8</text><text x="179" y="62" fill="var(--text)">15</text><text x="254" y="62" fill="#7B5BD6">6</text></g>
+  <g text-anchor="middle" font-size="11" fill="var(--sec)"><text x="105" y="80">Only you</text><text x="179" y="80">Both</text><text x="254" y="80">Only Priya</text></g></svg>
+ <div class="seg" style="margin-top:8px"><span class="on">Neighborhoods</span><span>Map</span></div>
+ <div class="list">
+  <div class="row"><div class="grow">North Center</div><div class="duo"><span style="color:var(--cov);font-weight:700">61%</span><span class="secc">·</span><span style="color:#7B5BD6">18%</span></div></div>
+  <div class="row"><div class="grow">Lakeview</div><div class="duo"><span style="color:var(--cov)">46%</span><span class="secc">·</span><span style="color:#7B5BD6;font-weight:700">72%</span></div></div>
+  <div class="row"><div class="grow">Uptown</div><div class="duo"><span style="color:var(--cov)">22%</span><span class="secc">·</span><span style="color:#7B5BD6;font-weight:700">49%</span></div></div>
+  <div class="row"><div class="grow">Avondale<div class="sub">Only you</div></div><div class="duo"><span style="color:var(--cov);font-weight:700">19%</span><span class="secc">·</span><span class="secc">0%</span></div></div>
+  <div class="row"><div class="grow">Edgewater<div class="sub">Only Priya</div></div><span class="cheer" style="color:var(--sugg);background:rgba(17,132,90,.12)">Run there next</span><div class="duo"><span class="secc">0%</span><span class="secc">·</span><span style="color:#7B5BD6;font-weight:700">33%</span></div></div>
+ </div>
+ <div class="foot">Bolder figure leads. "Map" shows street-level maps only if you both turned street sharing on (off by default).</div>
+</div><div class="homebar"></div></div>
+<figcaption>The Beli-style comparison: only you, both, only them. "Run there next" opens Discover with the start in a neighborhood only the friend has run. Priya's circle has a dashed outline as well as a different colour.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S24</b> Invite a friend <span class="v11">v1.1</span></div>
+<div class="phone light">
+ <div class="dim" style="background:rgba(0,0,0,.4)"></div>
+ <div class="msheet" style="top:120px;padding-top:8px">
+  <div class="grab"></div>
+  <div class="nav" style="height:40px"><div class="gbtn" style="width:34px;height:34px;box-shadow:none;background:var(--fill)"><svg class="i s"><use href="#i-x"/></svg></div><div class="ttl">Invite a friend</div><span></span></div>
+  <div class="qr" style="width:190px;height:190px;margin:14px auto 0;padding:10px;background:#fff;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,.08)"></div>
+  <div style="text-align:center;margin-top:14px;font-size:15px" class="secc">streetfill.app/i/7KQ2-MX</div>
+  <div style="text-align:center;font-size:22px;font-weight:700;letter-spacing:.08em;margin-top:2px" class="mono">7KQ2-MX</div>
+  <div style="margin-top:16px"><div class="btn"><svg class="i s"><use href="#i-share"/></svg>Share invite link</div></div>
+  <div style="margin-top:10px"><div class="btn tinted">Copy link</div></div>
+  <div class="sec-t">Pending</div>
+  <div class="list"><div class="row" style="font-size:16px"><div class="av" style="background:#5A9E5A">T</div><div class="grow">Tom<div class="sub">Sent 2 days ago · expires in 5 days</div></div><span class="acc" style="font-size:15px">Cancel</span></div></div>
+  <div class="foot">Friends see area summaries only, never your routes. Either of you can remove the friendship at any time.</div>
+ </div>
+ <div class="homebar"></div>
+</div>
+<figcaption>Friendship needs an invite: a link, a code or a QR code. There is no public search. A friend without the app gets the App Store, then enters the code. The domain shown is a placeholder.</figcaption></figure>
+
+<figure class="shot"><div class="cap-top"><b>S25</b> Sharing &amp; privacy <span class="v11">v1.1</span></div>
+<div class="phone light"><div class="scroll">
+ <div class="nav"><div class="gbtn"><svg class="i"><use href="#i-back"/></svg></div><span></span></div>
+ <div class="lt" style="padding-top:0">Sharing &amp; privacy</div>
+ <div class="sec-t">What friends see</div>
+ <div class="list">
+  <div class="row" style="font-size:16px"><div class="grow">Neighborhood &amp; city percentages</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">New-street counts</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">Feed posts for new areas</div><div class="toggle"></div></div>
+  <div class="row" style="font-size:16px"><div class="grow">Street-level map<div class="sub">Off by default · home zone removed first</div></div><div class="toggle off"></div></div>
+ </div>
+ <div class="sec-t">Home zone</div>
+ <div class="mapcard" style="height:150px"><svg class="map" data-vb="198 282 180 80" data-o="flat zone"></svg></div>
+ <div class="ctl" style="margin-top:8px"><div class="lab"><span>Radius</span><span class="mono">0.25 mi</span></div><div class="sl"><div class="trk"><i style="width:30%"></i></div><div class="knob" style="left:30%"></div></div></div>
+ <div class="foot" style="padding-top:0">Streets inside are never uploaded. The zone's location stays on this iPhone.</div>
+ <div class="list" style="margin-top:12px">
+  <div class="row" style="font-size:16px"><div class="grow">Hidden neighborhoods</div><span class="val">None</span><svg class="i s" style="color:var(--ter)"><use href="#i-chev"/></svg></div>
+  <div class="row" style="font-size:16px;color:#FF3B30"><div class="grow">Delete account &amp; shared data</div></div>
+ </div>
+</div><div class="homebar"></div></div>
+<figcaption>Area-level sharing is the default. Street-level maps are opt-in, and the home zone is cut out on the phone before anything is uploaded. Routes, times, pace and heart rate are never shared (see S21).</figcaption></figure>
+</div>
+
+<div style="max-width:1400px;margin:30px auto 60px;padding:0 28px;color:#6e6e73;font-size:13px">StreetFill design mockups · 15 November 2026 · Self-contained file: inline CSS and SVG, system fonts, one small inline script that draws the sample street grid. No network requests. If scripting is disabled, the maps appear blank but the screens still read.</div>
+
+<script>
+(function(){
+ // ---- Stylized sample city: deterministic street grid, lake to the east, sample coverage around "home" ----
+ var S=18,W=612,H=882,seed=20261115;
+ function rnd(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+ function shore(y){return 528+20*Math.sin(y/64)-(y>540?(y-540)*0.2:0);}
+ function blocked(x,y){if(x>shore(y)-8)return true;if(y>120&&y<720&&x>shore(y)-36)return true;if(x>398&&x<438&&y>206&&y<316)return true;if(x>112&&x<150&&y>400&&y<440)return true;return false;}
+ var runSegs=[[288,324,360,324],[360,252,360,324],[216,252,360,252],[216,252,216,378],[216,378,288,378],[288,324,288,378]];
+ var sugSegs=[[108,396,198,396],[108,396,108,486],[108,486,252,486],[252,414,252,486],[198,414,252,414],[198,396,198,414]];
+ var newSegs=[[378,198,520,198],[360,288,450,288],[450,288,450,342]];
+ var covSegs=[[288,198,378,198],[288,198,288,324],[288,324,486,324],[414,342,450,342],[414,342,414,396],[342,396,414,396],[342,342,342,396],[288,342,342,342],[288,324,288,342]];
+ function on(segs,x1,y1,x2,y2){for(var k=0;k<segs.length;k++){var s=segs[k],a=s[0],b=s[1],c=s[2],d=s[3];
+  if(a===c&&x1===a&&x2===a&&Math.min(y1,y2)>=Math.min(b,d)&&Math.max(y1,y2)<=Math.max(b,d))return true;
+  if(b===d&&y1===b&&y2===b&&Math.min(x1,x2)>=Math.min(a,c)&&Math.max(x1,x2)<=Math.max(a,c))return true;}return false;}
+ function prob(x,y){var d=Math.hypot(x-288,y-324),p=0.95*Math.exp(-d/62);
+  if(x>380&&x<540&&y>250&&y<460)p=Math.max(p,0.22);if(x>200&&x<380&&y>100&&y<250)p=Math.max(p,0.18);
+  if(x>330&&x<520&&y>460&&y<650)p=Math.max(p,0.12);if(x>380&&y>60&&y<250)p=Math.max(p,0.08);return p;}
+ var P={u:"",ua:"",c:"",ca:"",n:"",cp:""};
+ function edge(x1,y1,x2,y2,art,prev){
+  var mx=(x1+x2)/2,my=(y1+y2)/2;
+  if(blocked(x1,y1)||blocked(x2,y2)||blocked(mx,my))return false;
+  var p=prob(mx,my),cov=rnd()<(prev?Math.min(.9,p+.3):p*.45),isNew=false;
+  if(on(runSegs,x1,y1,x2,y2)){cov=rnd()<.35;isNew=!cov;}
+  else if(on(covSegs,x1,y1,x2,y2))cov=true;
+  if(on(sugSegs,x1,y1,x2,y2)||on(newSegs,x1,y1,x2,y2))cov=false;
+  var d="M"+x1.toFixed(1)+" "+y1.toFixed(1)+"L"+x2.toFixed(1)+" "+y2.toFixed(1);
+  if(isNew)P.n+=d;else if(cov){P[art?"ca":"c"]+=d;if(rnd()<.62)P.cp+=d;}else P[art?"ua":"u"]+=d;
+  return cov||isNew;}
+ var i,j,prev;
+ for(i=0;i*S<=W;i++){prev=false;for(j=0;(j+1)*S<=H;j++){if(rnd()<.025){prev=false;continue;}prev=edge(i*S,j*S,i*S,(j+1)*S,i%8===0,prev);}}
+ for(j=0;j*S<=H;j++){prev=false;for(i=0;(i+1)*S<=W;i++){if(rnd()<.025){prev=false;continue;}prev=edge(i*S,j*S,(i+1)*S,j*S,j%8===0,prev);}}
+ [[150,110,480,640],[30,420,400,882],[400,30,500,640],[30,250,330,640]].forEach(function(g){
+  var L=Math.hypot(g[2]-g[0],g[3]-g[1]),n=Math.ceil(L/20),k,pv=false;
+  for(k=0;k<n;k++){var a=k/n,b=(k+1)/n;pv=edge(g[0]+(g[2]-g[0])*a,g[1]+(g[3]-g[1])*a,g[0]+(g[2]-g[0])*b,g[1]+(g[3]-g[1])*b,true,pv);}});
+ var lake="M"+shore(0).toFixed(1)+" -300",y;for(y=0;y<=H+300;y+=10)lake+="L"+shore(y).toFixed(1)+" "+y;lake+="L1000 "+(H+300)+"L1000 -300Z";
+ var strip="M"+(shore(120)-36).toFixed(1)+" 120";for(y=120;y<=720;y+=10)strip+="L"+(shore(y)-36).toFixed(1)+" "+y;for(y=720;y>=120;y-=10)strip+="L"+shore(y).toFixed(1)+" "+y;strip+="Z";
+ var nb=[["Uptown",380,60,180,190],["Lincoln Square",200,100,180,150],["Irving Park",20,130,180,190],["North Center",200,250,180,160],["Lakeview",380,250,180,210],
+  ["Avondale",20,320,180,150],["Logan Square",20,470,280,170],["Lincoln Park",330,460,230,190],["West Town",20,640,330,200],["Near North Side",350,650,210,190]];
+ var VE=' vector-effect="non-scaling-stroke"',out="";
+ for(var k in P)out+='<path id="'+k+'" d="'+P[k]+'"'+VE+'/>';
+ out+='<path id="lake" d="'+lake+'"/><path id="river" d="M118 -20C150 160 250 300 236 470S330 690 372 900"'+VE+'/>';
+ out+='<g id="parks"><path d="'+strip+'"/><rect x="398" y="206" width="40" height="110" rx="4"/><rect x="112" y="400" width="38" height="40" rx="4"/></g>';
+ out+='<g id="nb">'+nb.map(function(n){return'<rect x="'+n[1]+'" y="'+n[2]+'" width="'+n[3]+'" height="'+n[4]+'"'+VE+'/>';}).join("")+'</g>';
+ out+='<g id="nbl">'+nb.map(function(n){return'<text x="'+(n[1]+n[3]/2)+'" y="'+(n[2]+n[4]/2)+'" text-anchor="middle">'+n[0].toUpperCase()+'</text>';}).join("")+
+  '<text x="590" y="300" text-anchor="middle" transform="rotate(90 590 300)" style="font-style:italic;letter-spacing:.2em">LAKE MICHIGAN</text></g>';
+ out+='<path id="route" d="M288 324H360V252H216V378H288Z"'+VE+'/>';
+ out+='<path id="sug" d="M288 324V396H198H108V486H252V414H198V396"'+VE+'/>';
+ function tx(y){return shore(y)-20;}
+ function tr(a,b){var q="M"+tx(a).toFixed(1)+" "+a;for(var yy=a+6;yy<=b;yy+=6)q+="L"+tx(yy).toFixed(1)+" "+yy;return q;}
+ function up(a,b){var q="";for(var yy=a;yy>=b;yy-=6)q+="L"+tx(yy).toFixed(1)+" "+yy;return q;}
+ out+='<path id="trc" d="'+tr(260,720)+'"'+VE+'/><path id="tru" d="'+tr(120,260)+'"'+VE+'/>';
+ var bch="M516 166";for(y=166;y<=206;y+=4)bch+="L"+(shore(y)+2).toFixed(1)+" "+y;bch+="L516 206Z";out+='<path id="beach" d="'+bch+'"/>';
+ out+='<path id="r1k" d="M288 324H'+tx(324).toFixed(1)+up(324,262)+'M380 198H288V324"'+VE+'/>';
+ out+='<path id="r1n" d="M'+tx(262).toFixed(1)+' 262'+up(258,174)+'L526 174L526 192L'+tx(198).toFixed(1)+' 198H380"'+VE+'/>';
+ out+='<path id="r3k" d="M288 324H360V288M450 342H414V396H342V342H288V324"'+VE+'/><path id="r3n" d="M360 288H450V342"'+VE+'/>';
+ document.getElementById("mapdefs").innerHTML=out;
+
+ // ---- Fill every map: layers chosen by data-o ----
+ document.querySelectorAll("svg.map").forEach(function(s){
+  var o=(s.getAttribute("data-o")||"").split(" "),has=function(k){return o.indexOf(k)>=0;},h="";
+  s.setAttribute("viewBox",s.getAttribute("data-vb")||"0 0 612 882");s.setAttribute("preserveAspectRatio","xMidYMid slice");
+  if(!has("card"))h+='<rect class="land" x="-400" y="-400" width="1500" height="1700"/><use href="#parks" class="park"/><use href="#lake" class="water"/><use href="#river" class="riv"/><use href="#beach" class="beach"/>';
+  if(has("nb"))h+='<use href="#nb" class="nbo"/>';
+  h+='<use href="#u" class="su"/><use href="#ua" class="sua"/>';
+  if(has("partial"))h+='<use href="#cp" class="sc"/>';else h+='<use href="#c" class="sc"/><use href="#ca" class="sca"/>';
+  if(has("route"))h+='<use href="#route" class="rt"/>';
+  if(!has("partial")){if(has("flat"))h+='<use href="#n" class="sca"/>';else h+='<use href="#n" class="sn"/><use href="#n" class="sn2"/>';}
+  h+='<use href="#tru" class="tu"/><use href="#trc" class="tc"/>';
+  var RT={r1:["r1k","r1n"],r2:[null,"sug"],r3:["r3k","r3n"]};
+  for(var rk in RT){if(!has(rk))continue;var ra=RT[rk][0],rb=RT[rk][1];
+   if(ra)h+='<use href="#'+ra+'" class="sg0"/>';h+='<use href="#'+rb+'" class="sg0"/>';
+   if(ra)h+='<use href="#'+ra+'" class="rk"/>';h+='<use href="#'+rb+'" class="rn"/><use href="#'+rb+'" class="rn2"/>';}
+  var vb=(s.getAttribute("data-vb")||"0 0 612 882").split(" ").map(Number),bb=s.getBoundingClientRect(),kk=1/Math.max((bb.width||390)/vb[2],(bb.height||300)/vb[3]);
+  var PINS={pins1:[[418,318,1],[488,226,2],[524,188,3],[522,168,4]],pins2:[[131,420,1],[238,452,2]],pins3:[[446,306,1],[430,290,2]]};
+  for(var pk in PINS){if(!has(pk))continue;PINS[pk].forEach(function(q){h+='<g class="pin"><circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+(7.5*kk)+'"'+VE+'/><text x="'+q[0]+'" y="'+(q[1]+3.2*kk)+'" text-anchor="middle" style="font-size:'+(9*kk)+'px">'+q[2]+'</text></g>';});}
+  if(has("dot"))h+='<circle cx="430" cy="324" r="'+(15*kk)+'" fill="#0A84FF" fill-opacity=".2"/><circle cx="430" cy="324" r="'+(6.5*kk)+'" fill="#0A84FF" stroke="#fff" stroke-width="2.5"'+VE+'/>';
+  if(has("zone"))h+='<circle cx="288" cy="324" r="36" class="zone"'+VE+'/><text x="288" y="'+(324+3*kk)+'" text-anchor="middle" style="font:700 '+(10*kk)+'px -apple-system,Helvetica,sans-serif;fill:var(--cov)">HOME ZONE</text>';
+  if(has("lbl"))h+='<use href="#nbl" class="lbl"/>';
+  s.insertAdjacentHTML("afterbegin",h);});
+
+ // ---- Status bar, Dynamic Island, tab bars ----
+ var sbi='<span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>'+
+  '<svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.5l2.4-2.9a3.6 3.6 0 0 0-4.8 0zM3.9 6.6a6.1 6.1 0 0 1 8.2 0l1.5-1.8a8.6 8.6 0 0 0-11.2 0zM.5 2.6a11.4 11.4 0 0 1 15 0L16 2a12.2 12.2 0 0 0-16 0z"/></svg>'+
+  '<svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="9" rx="2.4" fill="currentColor"/><path d="M25 4.5v4a2 2 0 0 0 0-4z" fill="currentColor" opacity=".45"/></svg></span>';
+ document.querySelectorAll(".phone").forEach(function(p){
+  var w=p.getAttribute("data-sb")==="w";
+  p.insertAdjacentHTML("afterbegin",'<div class="sb'+(w?" w":"")+'"><span>'+(w?"":"9:41")+'</span>'+sbi+'</div><div class="island"></div>');});
+ var T={Map:"i-map",Discover:"i-compass",Friends:"i-friends",Runs:"i-run"};
+ document.querySelectorAll(".tabs").forEach(function(t){var sel=t.getAttribute("data-sel"),names=t.hasAttribute("data-f")?["Map","Discover","Friends","Runs"]:["Map","Discover","Runs"];
+  t.innerHTML=names.map(function(x){return'<div class="'+(x===sel?"on":"")+'"><svg class="i"><use href="#'+T[x]+'"/></svg>'+x+'</div>';}).join("");});
+ document.querySelectorAll(".qr").forEach(function(q){var n=25,o='<svg viewBox="0 0 25 25" width="100%" height="100%" shape-rendering="crispEdges"><rect width="25" height="25" fill="#fff"/>',x,y;
+  function fin(a,b){o+='<rect x="'+a+'" y="'+b+'" width="7" height="7"/><rect x="'+(a+1)+'" y="'+(b+1)+'" width="5" height="5" fill="#fff"/><rect x="'+(a+2)+'" y="'+(b+2)+'" width="3" height="3"/>';}
+  for(y=0;y<n;y++)for(x=0;x<n;x++){if((x<8&&y<8)||(x>16&&y<8)||(x<8&&y>16))continue;if(rnd()<.48)o+='<rect x="'+x+'" y="'+y+'" width="1" height="1"/>';}
+  fin(0,0);fin(18,0);fin(0,18);q.innerHTML=o+'</svg>';});
+})();
+</script>
+</body>
+</html>

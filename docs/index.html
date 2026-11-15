@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreetFill: every street you've run, and the ones you haven't</title>
+<meta name="description" content="StreetFill turns the runs already in Apple Health into a map of your city, then plans runs that take you somewhere new. Coming to iPhone.">
+<meta property="og:title" content="StreetFill: every street you've run, and the ones you haven't">
+<meta property="og:description" content="Your run history as a map of your city, and generated runs over streets that are new to you. Coming to iPhone.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/screens/map.png">
+<meta name="theme-color" content="#D24F28">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23D24F28'/%3E%3Cpath d='M14 46V30h12V18h12v12h12' stroke='%23fff' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --accent:#D24F28; --accent-dark:#B23F1B; --tint:#FBECE6;
+  --green:#11845A; --green-tint:#E3F2EB; --blue:#2668D8;
+  --text:#14161A; --sec:#555A63; --line:#E6E3DD; --bg:#FAF8F5; --card:#fff; --land:#F1EEE8;
+  --radius:20px; --max:1120px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:16px;background:#fff;padding:8px 12px;z-index:10}
+
+/* nav */
+nav.top{position:sticky;top:0;z-index:5;background:rgba(250,248,245,.86);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;color:var(--text);text-decoration:none;letter-spacing:-.01em}
+.brand svg{width:30px;height:30px}
+nav.top ul{display:flex;gap:24px;list-style:none;margin:0;padding:0;align-items:center}
+nav.top ul a{color:var(--sec);text-decoration:none;font-size:15px}
+nav.top ul a:hover{color:var(--text)}
+nav.top .cta-sm{background:var(--text);color:#fff;padding:8px 14px;border-radius:999px;font-weight:600}
+nav.top .cta-sm:hover{color:#fff;background:#000}
+
+/* hero */
+.hero{padding:72px 0 40px;overflow:hidden}
+.hero .wrap > *,.feature > *,.final > *{min-width:0}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accent-dark);background:var(--tint);padding:6px 12px;border-radius:999px}
+h1{font-size:clamp(40px,6vw,64px);line-height:1.04;letter-spacing:-.03em;margin:18px 0 18px}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{font-size:20px;color:var(--sec);max-width:34ch;margin:0 0 28px}
+.hero .phone{justify-self:center;width:min(340px,80vw);filter:drop-shadow(0 30px 50px rgba(20,22,26,.18))}
+.trust{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;color:var(--sec);font-size:14px}
+.trust span{display:flex;align-items:center;gap:6px}
+.trust svg{width:16px;height:16px;flex:none}
+
+/* form */
+form.wait{display:flex;flex-wrap:wrap;gap:10px;max-width:520px}
+form.wait input{flex:1 1 180px;font:inherit;font-size:16px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text)}
+form.wait input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+form.wait button{flex:0 0 auto;font:inherit;font-size:16px;font-weight:600;padding:14px 22px;border-radius:14px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+form.wait button:hover{background:var(--accent-dark)}
+form.wait button[disabled]{opacity:.6;cursor:default}
+.form-note{font-size:13px;color:var(--sec);margin:10px 0 0;max-width:520px}
+.form-msg{font-size:15px;font-weight:600;margin:12px 0 0;min-height:1.5em}
+.form-msg.ok{color:var(--green)}.form-msg.err{color:var(--accent-dark)}
+
+/* sections */
+section{padding:88px 0}
+.kicker{font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+h2{font-size:clamp(30px,4vw,44px);line-height:1.1;letter-spacing:-.02em;margin:10px 0 16px}
+.intro{font-size:19px;color:var(--sec);max-width:60ch;margin:0}
+
+/* how */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.step .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--tint);color:var(--accent-dark);margin-bottom:14px}
+.step h3{margin:0 0 8px;font-size:19px}
+.step p{margin:0;color:var(--sec)}
+
+/* feature rows */
+.feature{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.feature + .feature{margin-top:96px}
+.feature.flip .copy{order:2}
+.feature .shot{justify-self:center;width:min(320px,78vw);filter:drop-shadow(0 24px 40px rgba(20,22,26,.16))}
+.feature h3{font-size:clamp(26px,3vw,34px);letter-spacing:-.02em;line-height:1.15;margin:8px 0 14px}
+.feature p{color:var(--sec);font-size:18px;margin:0 0 16px}
+.feature ul{list-style:none;padding:0;margin:0}
+.feature li{display:flex;gap:10px;padding:7px 0;font-size:16px}
+.feature li svg{width:20px;height:20px;flex:none;margin-top:2px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;vertical-align:middle}
+.tag.v1{background:var(--green-tint);color:var(--green)}
+.tag.next{background:#E9EEFB;color:var(--blue)}
+.band{background:var(--land)}
+
+/* compare */
+.compare{margin-top:40px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+.compare table{width:100%;border-collapse:collapse;font-size:16px}
+.compare th,.compare td{padding:16px 20px;text-align:left;border-bottom:1px solid var(--line)}
+.compare tr:last-child td{border-bottom:0}
+.compare th{font-size:14px;color:var(--sec);font-weight:600;background:#FBFAF8}
+.compare td.yes{color:var(--green);font-weight:600}
+.compare td.no{color:var(--sec)}
+
+/* privacy */
+.privacy{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.privacy div{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+.privacy h3{margin:10px 0 6px;font-size:18px}
+.privacy p{margin:0;color:var(--sec)}
+.privacy svg{width:28px;height:28px}
+
+/* faq */
+details{border-bottom:1px solid var(--line);padding:18px 0}
+details summary{cursor:pointer;font-weight:600;font-size:18px;list-style:none;display:flex;justify-content:space-between;gap:16px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";color:var(--accent);font-size:22px;line-height:1}
+details[open] summary::after{content:"–"}
+details p{color:var(--sec);margin:10px 0 0;max-width:70ch}
+
+/* final cta */
+.final{background:var(--text);color:#fff;border-radius:28px;padding:56px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+.final h2{color:#fff;margin-top:0}
+.final p{color:rgba(255,255,255,.72);font-size:18px;margin:0}
+.final form.wait input{border-color:transparent}
+.final .form-note{color:rgba(255,255,255,.6)}
+.final .form-msg.ok{color:#6FD3A4}.final .form-msg.err{color:#FFB199}
+
+footer{padding:48px 0 64px;color:var(--sec);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
+footer a{color:var(--sec)}
+
+@media (max-width:880px){
+  .hero .wrap,.feature,.final{grid-template-columns:minmax(0,1fr)}
+  .compare{overflow-x:auto}
+  .compare th,.compare td{padding:12px 14px;font-size:15px}
+  .feature.flip .copy{order:0}
+  .steps,.privacy{grid-template-columns:minmax(0,1fr)}
+  nav.top ul li.hide-sm{display:none}
+  .hero{padding-top:44px}
+  .final{padding:36px 24px}
+  section{padding:64px 0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#D24F28"/><path d="M14 46V30h12V18h12v12h12" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="check" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#E3F2EB"/><path d="M6 10.4l2.6 2.6L14.2 7.4" stroke="#11845A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="nobat" viewBox="0 0 24 24"><rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 10v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 10h5v4H6z" fill="currentColor"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="14" r="2.2" fill="currentColor"/></symbol>
+  <symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+
+<nav class="top" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#"><svg aria-hidden="true"><use href="#logo"/></svg>StreetFill</a>
+    <ul>
+      <li class="hide-sm"><a href="#how">How it works</a></li>
+      <li class="hide-sm"><a href="#discover">Discover</a></li>
+      <li class="hide-sm"><a href="#privacy">Privacy</a></li>
+      <li><a class="cta-sm" href="#join">Join the beta</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Coming to iPhone · beta testers wanted</span>
+      <h1>Every street you've run.<br><em>And the ones you haven't.</em></h1>
+      <p class="lede">StreetFill turns the runs already in Apple Health into a map of your city, then plans runs that take you somewhere new.</p>
+      <form class="wait" data-waitlist aria-label="Join the beta waitlist">
+        <input type="email" name="email" required placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+        <input type="text" name="city" placeholder="Your city" aria-label="City you run in" autocomplete="address-level2">
+        <button type="submit">Join the beta</button>
+      </form>
+      <p class="form-msg" role="status" aria-live="polite"></p>
+      <p class="form-note">We're launching one city at a time. Telling us yours helps decide where we go next. We'll email you about the beta and launch, nothing else.</p>
+      <div class="trust">
+        <span><svg><use href="#lock" /></svg>Routes stay on your iPhone</span>
+        <span><svg><use href="#nobat" /></svg>No battery-draining tracking</span>
+        <span><svg><use href="#heart" /></svg>Works with Apple Watch</span>
+      </div>
+    </div>
+    <img class="phone" src="assets/screens/map.png" width="651" height="1345" alt="StreetFill map of Chicago: run streets in orange, unrun streets dashed, 8.4% of the city complete, North Center the top neighborhood at 61%.">
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">How it works</div>
+    <h2>Your history is already a map. You just haven't seen it.</h2>
+    <p class="intro">If you run with an Apple Watch or an app that saves your route to Apple Health, StreetFill can show you every street you've covered the first time you open it.</p>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Connect Apple Health</h3><p>StreetFill reads your workouts and their routes. Nothing else.</p></div>
+      <div class="step"><div class="n">2</div><h3>See your city fill in</h3><p>Years of runs become a street-by-street map, with your percentage for the city and every neighborhood.</p></div>
+      <div class="step"><div class="n">3</div><h3>Keep running as usual</h3><p>Record with your Watch or your usual app. After each run StreetFill tells you which streets were new.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="feature">
+      <div class="copy">
+        <div class="kicker">See where you've been <span class="tag v1">At launch</span></div>
+        <h3>Streets that count because you actually ran them</h3>
+        <p>Other street-completion apps track you live in the background, and runners say they miss streets. StreetFill matches the route your workout already recorded, so a street you ran is a street you get.</p>
+        <ul>
+          <li><svg><use href="#check"/></svg>Completion for your city and each neighborhood</li>
+          <li><svg><use href="#check"/></svg>"9 new streets" summary after every run</li>
+          <li><svg><use href="#check"/></svg>Share cards for "I've run 61% of my neighborhood"</li>
+        </ul>
+      </div>
+      <img class="shot" src="assets/screens/postrun.png" width="651" height="1345" alt="Post-run summary: 9 streets completed, 14 started, 2.1 new miles, North Center up from 59.7% to 61%." loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="discover">
+  <div class="wrap">
+    <div class="feature flip">
+      <div class="copy">
+        <div class="kicker">Discover <span class="tag v1">At launch</span></div>
+        <h3>Runs that take you somewhere new</h3>
+        <p>Pick a distance, flat or hilly, and what you'd like to see. StreetFill plans three loops built around streets you've never run, and shows you the beach, park or landmark you'll pass before you go.</p>
+        <ul>
+          <li><svg><use href="#check"/></svg>Choose how much of the run is new to you</li>
+          <li><svg><use href="#check"/></svg>Flat to hilly, waterfront, parks, landmarks, quiet streets</li>
+          <li><svg><use href="#check"/></svg>Photo previews and an elevation profile for every route</li>
+          <li><svg><use href="#check"/></svg>Follow it in the app or send it to your watch as a GPX file</li>
+        </ul>
+      </div>
+      <img class="shot" src="assets/screens/route.png" width="651" height="1345" alt="Route detail for Lakefront to Montrose Beach: 5.1 miles, 40 feet of climb, 38% new streets, with highlights Graceland Cemetery, Cricket Hill and Montrose Beach." loading="lazy">
+    </div>
+
+    <div class="compare" role="region" aria-label="How StreetFill compares">
+      <table>
+        <thead><tr><th scope="col"></th><th scope="col">Typical route generator</th><th scope="col">StreetFill</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Distance, loop, flat or hilly</th><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><th scope="row">Knows which streets you've already run</th><td class="no">No</td><td class="yes">Yes</td></tr>
+          <tr><th scope="row">Shows what you'll pass along the way</th><td class="no">Rarely</td><td class="yes">Yes</td></tr>
+          <tr><th scope="row">Counts the new streets when you get home</th><td class="no">No</td><td class="yes">Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="feature">
+      <div class="copy">
+        <div class="kicker">Friends <span class="tag next">Coming next</span></div>
+        <h3>Race your friends to new neighborhoods</h3>
+        <p>See the neighborhoods only you have run, only they have run, and the ones you share. A friends-only leaderboard ranks who explored the most this week, and "Run there next" plans a route into their territory.</p>
+        <ul>
+          <li><svg><use href="#check"/></svg>Friends see neighborhood percentages, never your routes</li>
+          <li><svg><use href="#check"/></svg>Invite by link or QR code. No public profiles.</li>
+          <li><svg><use href="#check"/></svg>Free, always</li>
+        </ul>
+      </div>
+      <img class="shot" src="assets/screens/friends.png" width="651" height="1345" alt="Comparison with a friend: 8 neighborhoods only you have run, 15 you share, 6 only your friend has run." loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="kicker">Privacy</div>
+    <h2>Your routes never leave your phone</h2>
+    <p class="intro">StreetFill does the matching on your iPhone against a downloaded street map of your city. There's no account to use the map, and no server that sees where you run.</p>
+    <div class="privacy">
+      <div><svg style="color:var(--accent)"><use href="#lock"/></svg><h3>On-device matching</h3><p>Workouts and routes are read from Apple Health and processed on your iPhone. They aren't uploaded.</p></div>
+      <div><svg style="color:var(--accent)"><use href="#home"/></svg><h3>A zone around home</h3><p>If you add friends later, streets around your home are removed on the phone before anything is shared.</p></div>
+      <div><svg style="color:var(--accent)"><use href="#eye"/></svg><h3>No ads, no data sales</h3><p>Health data is never used for advertising or sold. Delete everything from Settings at any time.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="kicker">Questions</div>
+    <h2>FAQ</h2>
+    <details><summary>When can I use it?</summary><p>StreetFill is in development. Beta testers in our first city get a TestFlight invite before launch; everyone on the list hears when it's on the App Store.</p></details>
+    <details><summary>Do I need an Apple Watch?</summary><p>No, but your runs need to be in Apple Health with a route. An Apple Watch does that automatically. Many running apps also save routes to Health; we're checking which ones during the beta.</p></details>
+    <details><summary>Does it work on Android?</summary><p>Not at first. StreetFill is built for iPhone and Apple Health.</p></details>
+    <details><summary>Which cities?</summary><p>We're starting with one city and adding more based on where people sign up. Put your city in the form above.</p></details>
+    <details><summary>Do trails and park paths count?</summary><p>Yes. Paths and trails have their own progress, and Discover routes can use them, so lakefront and beach paths are in. Your street percentage stays streets only.</p></details>
+    <details><summary>How much will it cost?</summary><p>Your map, your city and neighborhood percentages, post-run summaries, sharing and friends are free. A paid plan adds unlimited Discover runs and more cities. Pricing will be announced before launch.</p></details>
+  </div>
+</section>
+
+<section id="join">
+  <div class="wrap">
+    <div class="final">
+      <div>
+        <h2>Help us test StreetFill</h2>
+        <p>We're looking for runners who record with an Apple Watch or a running app and want to see their city fill in.</p>
+      </div>
+      <div>
+        <form class="wait" data-waitlist aria-label="Join the beta waitlist">
+          <input type="email" name="email" required placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+          <input type="text" name="city" placeholder="Your city" aria-label="City you run in" autocomplete="address-level2">
+          <button type="submit">Join the beta</button>
+        </form>
+        <p class="form-msg" role="status" aria-live="polite"></p>
+        <p class="form-note">We'll only email you about the beta and launch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 StreetFill. App screens shown are design mockups; the app is in development.</span>
+    <span><a href="mockups/">Design mockups</a> · <a href="product/product-plan">Product plan</a> · <a href="https://github.com/ashwinpazhoor21/StreetFill">GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+/* Waitlist. Set WAITLIST_ENDPOINT to a form service URL that accepts a POST of
+   email and city (for example a Formspree, Tally or Basin form endpoint). Until it
+   is set, the form says sign-ups are opening soon instead of pretending to work. */
+var WAITLIST_ENDPOINT = "";
+
+document.querySelectorAll('form[data-waitlist]').forEach(function (form) {
+  var msg = form.nextElementSibling;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var btn = form.querySelector('button');
+    if (!WAITLIST_ENDPOINT) {
+      msg.className = 'form-msg err';
+      msg.textContent = "Sign-ups open in a few days. Please check back soon.";
+      return;
+    }
+    btn.disabled = true;
+    msg.className = 'form-msg';
+    msg.textContent = 'Sending…';
+    fetch(WAITLIST_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      form.reset();
+      msg.className = 'form-msg ok';
+      msg.textContent = "You're on the list. Thanks!";
+    }).catch(function () {
+      msg.className = 'form-msg err';
+      msg.textContent = 'Something went wrong. Please try again.';
+    }).finally(function () { btn.disabled = false; });
+  });
+});
+</script>
+</body>
+</html>
