@@ -50,6 +50,17 @@ class Workout:
     route_paths: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class RoutePoint:
+    lat: float
+    lon: float
+    time: datetime | None
+    h_acc: float | None = None  # horizontal accuracy, metres (GPX extension ``hAcc``)
+    ele: float | None = None
+    speed: float | None = None  # m/s
+    course: float | None = None  # degrees
+
+
 def parse_health_date(text: str) -> datetime:
     """Parse Health's ``2024-05-01 07:30:00 -0500`` format (timezone-aware)."""
     return datetime.strptime(text.strip(), "%Y-%m-%d %H:%M:%S %z")
@@ -138,6 +149,57 @@ def iter_workouts(fh: IO[bytes], activities: Iterable[str] = DEFAULT_ACTIVITIES)
             root.clear()
 
 
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def _float(text: str | None) -> float | None:
+    if text is None:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _gpx_time(text: str | None) -> datetime | None:
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def iter_gpx_points(fh: IO[bytes]) -> Iterator[RoutePoint]:
+    """Stream track points from a Health workout-route GPX file.
+
+    Segments are concatenated in file order; the matcher splits on time and
+    distance gaps itself (plan 5.4 step 1). Points without valid coordinates
+    are skipped.
+    """
+    for _, el in iterparse(fh, events=("end",)):
+        if _local(el.tag) != "trkpt":
+            continue
+        lat, lon = _float(el.get("lat")), _float(el.get("lon"))
+        if lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180:
+            values: dict[str, str | None] = {}
+            for child in el.iter():
+                name = _local(child.tag)
+                if name in ("ele", "time", "speed", "course", "hAcc"):
+                    values[name] = child.text
+            yield RoutePoint(
+                lat=lat,
+                lon=lon,
+                time=_gpx_time(values.get("time")),
+                h_acc=_float(values.get("hAcc")),
+                ele=_float(values.get("ele")),
+                speed=_float(values.get("speed")),
+                course=_float(values.get("course")),
+            )
+        el.clear()
+
+
 class HealthExport:
     """An Apple Health export, read in place from a zip file or a folder."""
 
@@ -189,6 +251,23 @@ class HealthExport:
     def workouts(self, activities: Iterable[str] = DEFAULT_ACTIVITIES) -> Iterator[Workout]:
         with self.open("export.xml") as fh:
             yield from iter_workouts(fh, activities)
+
+    def route_points(self, workout: Workout) -> list[RoutePoint]:
+        """All route points for a workout, in time order, from every linked GPX file.
+
+        Route files the export references but does not contain are skipped
+        (Health sometimes lists routes it did not export).
+        """
+        points: list[RoutePoint] = []
+        for rel in workout.route_paths:
+            try:
+                with self.open(rel) as fh:
+                    points.extend(iter_gpx_points(fh))
+            except (KeyError, FileNotFoundError):
+                continue
+        if all(p.time is not None for p in points):
+            points.sort(key=lambda p: p.time)
+        return points
 
     def close(self) -> None:
         if self._zip is not None:
