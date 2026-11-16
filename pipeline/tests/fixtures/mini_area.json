@@ -1,0 +1,486 @@
+{
+ "version": 0.6,
+ "generator": "hand-made test fixture (synthetic coordinates)",
+ "elements": [
+  {
+   "type": "node",
+   "id": 1,
+   "lat": 41.9,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 10,
+   "lat": 41.9,
+   "lon": -87.64935
+  },
+  {
+   "type": "node",
+   "id": 2,
+   "lat": 41.9,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 3,
+   "lat": 41.9,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 4,
+   "lat": 41.9,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 5,
+   "lat": 41.899,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 6,
+   "lat": 41.901,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 8,
+   "lat": 41.901,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 11,
+   "lat": 41.901,
+   "lon": -87.64935
+  },
+  {
+   "type": "node",
+   "id": 12,
+   "lat": 41.899,
+   "lon": -87.64935
+  },
+  {
+   "type": "node",
+   "id": 13,
+   "lat": 41.902,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 14,
+   "lat": 41.902,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 15,
+   "lat": 41.903,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 16,
+   "lat": 41.903,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 17,
+   "lat": 41.904,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 18,
+   "lat": 41.904,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 19,
+   "lat": 41.904,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 20,
+   "lat": 41.904,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 21,
+   "lat": 41.905,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 22,
+   "lat": 41.905,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 23,
+   "lat": 41.905,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 24,
+   "lat": 41.905,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 25,
+   "lat": 41.906,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 26,
+   "lat": 41.906,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 27,
+   "lat": 41.906,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 28,
+   "lat": 41.906,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 29,
+   "lat": 41.907,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 30,
+   "lat": 41.907,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 31,
+   "lat": 41.897,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 32,
+   "lat": 41.897,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 33,
+   "lat": 41.898,
+   "lon": -87.64935
+  },
+  {
+   "type": "node",
+   "id": 34,
+   "lat": 41.896,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 35,
+   "lat": 41.896,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 36,
+   "lat": 41.896,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 37,
+   "lat": 41.896,
+   "lon": -87.6461
+  },
+  {
+   "type": "node",
+   "id": 40,
+   "lat": 41.894,
+   "lon": -87.65
+  },
+  {
+   "type": "node",
+   "id": 41,
+   "lat": 41.894,
+   "lon": -87.6487
+  },
+  {
+   "type": "node",
+   "id": 42,
+   "lat": 41.894,
+   "lon": -87.6474
+  },
+  {
+   "type": "node",
+   "id": 43,
+   "lat": 41.895,
+   "lon": -87.64805
+  },
+  {
+   "type": "way",
+   "id": 100,
+   "nodes": [
+    1,
+    10,
+    2,
+    3
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Oak Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 101,
+   "nodes": [
+    3,
+    4
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Oak Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 200,
+   "nodes": [
+    5,
+    2,
+    6
+   ],
+   "tags": {
+    "highway": "tertiary",
+    "name": "Elm Avenue"
+   }
+  },
+  {
+   "type": "way",
+   "id": 300,
+   "nodes": [
+    11,
+    10,
+    12
+   ],
+   "tags": {
+    "highway": "service",
+    "service": "alley"
+   }
+  },
+  {
+   "type": "way",
+   "id": 301,
+   "nodes": [
+    17,
+    18
+   ],
+   "tags": {
+    "highway": "motorway",
+    "name": "Expressway"
+   }
+  },
+  {
+   "type": "way",
+   "id": 302,
+   "nodes": [
+    19,
+    20
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Under Street",
+    "tunnel": "yes",
+    "layer": "-1"
+   }
+  },
+  {
+   "type": "way",
+   "id": 303,
+   "nodes": [
+    21,
+    22
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "No Foot Road",
+    "foot": "no"
+   }
+  },
+  {
+   "type": "way",
+   "id": 304,
+   "nodes": [
+    13,
+    14
+   ],
+   "tags": {
+    "highway": "trunk",
+    "name": "Lake Shore Drive",
+    "foot": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 305,
+   "nodes": [
+    15,
+    16
+   ],
+   "tags": {
+    "highway": "trunk",
+    "name": "Highway 41"
+   }
+  },
+  {
+   "type": "way",
+   "id": 306,
+   "nodes": [
+    23,
+    24
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Gated Lane",
+    "access": "private"
+   }
+  },
+  {
+   "type": "way",
+   "id": 307,
+   "nodes": [
+    4,
+    8
+   ],
+   "tags": {
+    "highway": "residential"
+   }
+  },
+  {
+   "type": "way",
+   "id": 308,
+   "nodes": [
+    25,
+    26
+   ],
+   "tags": {
+    "highway": "primary_link"
+   }
+  },
+  {
+   "type": "way",
+   "id": 309,
+   "nodes": [
+    27,
+    28
+   ],
+   "tags": {
+    "highway": "construction",
+    "construction": "residential"
+   }
+  },
+  {
+   "type": "way",
+   "id": 310,
+   "nodes": [
+    29,
+    30
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Lower Drive",
+    "layer": "-1"
+   }
+  },
+  {
+   "type": "way",
+   "id": 311,
+   "nodes": [
+    1,
+    5
+   ],
+   "tags": {
+    "highway": "footway"
+   }
+  },
+  {
+   "type": "way",
+   "id": 312,
+   "nodes": [
+    31,
+    32,
+    33,
+    31
+   ],
+   "tags": {
+    "highway": "pedestrian",
+    "name": "Plaza",
+    "area": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 313,
+   "nodes": [
+    31,
+    32,
+    33,
+    31
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Circle Court"
+   }
+  },
+  {
+   "type": "way",
+   "id": 314,
+   "nodes": [
+    34,
+    35,
+    999,
+    36,
+    37
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Gap Lane"
+   }
+  },
+  {
+   "type": "way",
+   "id": 315,
+   "nodes": [
+    40,
+    41,
+    42,
+    43,
+    41
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "Loop Road"
+   }
+  }
+ ]
+}
