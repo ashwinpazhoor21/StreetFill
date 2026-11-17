@@ -137,7 +137,7 @@ class Matcher:
     def from_pack(cls, path: str | Path, cfg: MatchConfig = DEFAULT_CONFIG) -> "Matcher":
         from .pack import decode_geometry
 
-        con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
         try:
             meta = dict(con.execute("SELECT key, value FROM meta"))
             projection = LocalProjection(float(meta["origin_lat"]), float(meta["origin_lon"]))

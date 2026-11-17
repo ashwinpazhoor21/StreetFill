@@ -258,3 +258,10 @@ def test_pack_matcher_agrees_with_network_matcher(matcher, tmp_path):
     loop = line((-190, 0), (190, 0)) + line((200, 10), (200, 70)) + line((190, 80), (-190, 80))
     assert from_pack.match(route(loop)) == matcher.match(route(loop))
     assert from_pack.street_names
+
+
+def test_from_pack_handles_unusual_paths(tmp_path):
+    out = tmp_path / "dir #1?" / "pack.sqlite"
+    out.parent.mkdir()
+    write_pack(GRID, out)
+    assert Matcher.from_pack(out).checkpoints
