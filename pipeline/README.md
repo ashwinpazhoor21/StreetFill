@@ -27,6 +27,20 @@ The pack format (schema v1: `meta`, `streets`, `edges`, `grid`) is documented at
 
 The public Overpass server can be slow or rate-limited. If a download fails, retry later, pass another server with `--overpass-url`, or export the area as Overpass JSON yourself and use `--osm-json`.
 
+## Gate 1: measure matching accuracy
+
+Everything here reads your Health export, so write outputs under `data/` (git-ignored).
+
+```bash
+streetfill match       --pack pipeline/out/pack.sqlite --export data/export.zip --out data/match.json
+streetfill label-sheet --pack pipeline/out/pack.sqlite --export data/export.zip --out-dir data/labels --sample 150
+# open data/labels/edges.geojson in any GeoJSON viewer (it shows the edges and your route traces),
+# then fill the label column of data/labels/labels.csv with ran or not_run (leave blank to skip)
+streetfill evaluate    --labels data/labels/labels.csv --match data/match.json
+```
+
+The label sheet carries no matcher predictions, so labelling stays blind. An edge counts as *predicted ran* when at least half its checkpoints were visited (`--ran-threshold`). Agreement = correct ÷ labelled; recall = found ÷ labelled ran. Gate 1 passes at 95% or higher on both (product plan 5.8, section 14).
+
 ## Personal data
 
 Apple Health exports contain your location history. Keep them under `data/` at the repository root, which is git-ignored, and never commit them.

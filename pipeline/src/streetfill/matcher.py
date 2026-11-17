@@ -167,6 +167,25 @@ class Matcher:
 
     # --- matching -------------------------------------------------------------------
 
+    @property
+    def edges(self) -> dict[int, MatchEdge]:
+        return {eid: g.edge for eid, g in self._edges.items()}
+
+    def edge_length(self, edge_id: int) -> float:
+        return self._edges[edge_id].length_m
+
+    def edges_near(self, points: Iterable[XY], radius_m: float) -> set[int]:
+        """Ids of edges within ``radius_m`` of any of ``points`` (local metres)."""
+        found: set[int] = set()
+        for p in points:
+            for cell in self._cells_for_box(p[0] - radius_m, p[1] - radius_m, p[0] + radius_m, p[1] + radius_m):
+                for eid, i in self._index.get(cell, ()):
+                    if eid not in found:
+                        g = self._edges[eid]
+                        if point_segment_distance(p, g.xy[i], g.xy[i + 1]) <= radius_m:
+                            found.add(eid)
+        return found
+
     def _candidates(self, p: XY, bearing: float) -> dict[int, float]:
         """Edge id -> distance, for edges the point may be travelling along."""
         r = self._max_radius
