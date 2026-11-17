@@ -45,6 +45,7 @@ def test_config_defaults_match_plan():
     assert (c.max_h_acc_m, c.max_speed_mps, c.gap_split_s, c.gap_split_m, c.densify_m) == (25, 7, 30, 100, 5)
     assert (c.checkpoint_spacing_m, c.intersection_clear_m, c.short_edge_m) == (15, 10, 30)
     assert (c.visit_radius_m, c.max_bearing_diff_deg, c.tie_margin_m, c.street_complete_frac) == (20, 30, 3, 0.9)
+    assert (c.min_segment_m, c.along_track_m) == (30, 5)
 
 
 @pytest.mark.parametrize(
@@ -82,7 +83,7 @@ def test_clean_drops_inaccurate_points():
     pts[4].h_acc = 40.0
     pts[5].h_acc = 25.0  # exactly the limit is kept
     pts[6].h_acc = None  # unknown accuracy is kept
-    segs = clean_route(pts, PROJ, MatchConfig(densify_m=100))
+    segs = clean_route(pts, PROJ, MatchConfig(densify_m=100, min_segment_m=0))
     assert len(segs[0]) == 9
 
 
@@ -90,13 +91,13 @@ def test_clean_drops_a_single_spike():
     pts = run(straight(10))
     lat, lon = PROJ.to_latlon((12.0, 60.0))  # 60 m off the line for one second
     pts[4] = P(lat, lon, pts[4].time)
-    segs = clean_route(pts, PROJ, MatchConfig(densify_m=100))
+    segs = clean_route(pts, PROJ, MatchConfig(densify_m=100, min_segment_m=0))
     assert len(segs) == 1
     assert all(abs(y) < 1e-6 for _, y in segs[0])
 
 
 def test_clean_splits_at_a_jump_instead_of_bridging():
-    pts = run(straight(10) + [(x + 300, 200) for x, _ in straight(10)])
+    pts = run(straight(20) + [(x + 300, 200) for x, _ in straight(20)])
     segs = clean_route(pts, PROJ)
     assert len(segs) == 2
     assert max(y for _, y in segs[0]) < 1e-6
@@ -105,8 +106,8 @@ def test_clean_splits_at_a_jump_instead_of_bridging():
 
 def test_clean_splits_at_a_long_time_and_distance_gap():
     # 5 minutes and 150 m between the two halves (0.5 m/s, so not a speed jump).
-    first = run(straight(10))
-    second = run([(x + 177, 0) for x, _ in straight(10)], start=first[-1].time + timedelta(minutes=5))
+    first = run(straight(20))
+    second = run([(x + 207, 0) for x, _ in straight(20)], start=first[-1].time + timedelta(minutes=5))
     assert len(clean_route(first + second, PROJ)) == 2
 
 
@@ -125,7 +126,7 @@ def test_clean_short_gap_in_distance_is_not_split():
 
 
 def test_clean_without_times_splits_on_distance_only():
-    pts = run(straight(10) + [(x + 200, 0) for x, _ in straight(10)])
+    pts = run(straight(20) + [(x + 200, 0) for x, _ in straight(20)])
     for p in pts:
         p.time = None
     assert len(clean_route(pts, PROJ)) == 2
@@ -177,5 +178,31 @@ def test_edge_checkpoints_degenerate_edges():
 
 
 def test_route_bearings():
-    assert route_bearings([(0, 0), (10, 0), (10, 10)]) == pytest.approx([90, 45, 0])
-    assert route_bearings([(0, 0)]) == [0.0]
+    assert route_bearings([(0, 0), (10, 0), (10, 10)], window_m=1) == pytest.approx([90, 45, 0])
+    assert route_bearings([(0, 0)]) == [None]
+    east = [(x * 5.0, 0.0) for x in range(10)]
+    assert route_bearings(east) == pytest.approx([90] * 10)
+
+
+def test_route_bearings_smooth_jitter_over_the_window():
+    zigzag = [(x * 5.0, 3.0 if x % 2 else -3.0) for x in range(20)]
+    inner = route_bearings(zigzag)[3:-3]
+    assert all(b is not None and (b - 90) % 360 < 30 or (90 - b) % 360 < 30 for b in inner)
+
+
+def test_route_bearings_none_where_the_route_doubles_back():
+    out_and_back = [(x * 5.0, 0.0) for x in range(10)] + [(x * 5.0, 0.0) for x in range(8, -1, -1)]
+    b = route_bearings(out_and_back)
+    assert b[0] == pytest.approx(90) and b[5] == pytest.approx(90)
+    assert b[9] is None
+    assert b[-1] == pytest.approx(270) and b[-5] == pytest.approx(270)
+
+
+def test_clean_drops_short_pieces_between_jumps():
+    pts = run(straight(20))
+    lat, lon = PROJ.to_latlon((30.0, 80.0))
+    lat2, lon2 = PROJ.to_latlon((33.0, 80.0))
+    pts[10] = P(lat, lon, pts[10].time)
+    pts[11] = P(lat2, lon2, pts[11].time)
+    segs = clean_route(pts, PROJ)
+    assert all(abs(y) < 1e-6 for seg in segs for _, y in seg)
