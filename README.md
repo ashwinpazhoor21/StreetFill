@@ -15,8 +15,8 @@ Phasing follows **Option B** in the product plan (section 12): v1 with Discover 
 
 | Week | Milestone | Status |
 |---|---|---|
-| 1 | Matching spike: Python reference matcher, measured against hand-labelled streets (Gate 1) | **In progress** |
-| 2 | Street-pack pipeline v2 (paths, elevation, scenery, highlights) | Not started |
+| 1 | Matching spike: Python reference matcher, measured against hand-labelled streets (Gate 1) | **Tooling done**; the Gate 1 run on the owner's Health data is deferred (#7) |
+| 2 | Street-pack pipeline v2 (paths, elevation, scenery, highlights) | **Next** |
 | 3 | Route-generation spike (Gate 2) | Not started |
 | 4–12 | iOS app, TestFlight, launch | Not started |
 
@@ -29,7 +29,7 @@ docs/               GitHub Pages site (landing page) and all product documentati
   product/          Product and build plan
   research/         Market research behind the product decision
   assets/screens/   Mockup screenshots used on the landing page
-pipeline/           Python: street-pack builder, reference matcher, evaluation (week 1)
+pipeline/           Python: street-pack builder, Health export reader, reference matcher, Gate 1 tools
 ```
 
 ## Week 1: run the matching spike

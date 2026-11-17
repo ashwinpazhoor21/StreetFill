@@ -41,6 +41,12 @@ def build_parser() -> argparse.ArgumentParser:
     ep.add_argument("--match", required=True, help="match result .json")
     ep.add_argument("--ran-threshold", type=float, default=0.5,
                     help="fraction of an edge's checkpoints needed to predict 'ran'")
+
+    rp = sub.add_parser("report", help="self-contained HTML map of covered and uncovered streets")
+    rp.add_argument("--pack", required=True)
+    rp.add_argument("--match", required=True, help="match result .json")
+    rp.add_argument("--out", required=True, help="output .html")
+    rp.add_argument("--ran-threshold", type=float, default=0.5)
     return parser
 
 
@@ -138,6 +144,20 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    from .evaluation import load_result
+    from .report import write_report
+
+    try:
+        result = load_result(args.match)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    out = write_report(args.pack, result, args.out, ran_threshold=args.ran_threshold)
+    print(f"wrote {out} (opens offline; shows streets only, no route traces)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -145,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
     commands = {
+        "report": cmd_report,
         "build-pack": cmd_build_pack,
         "match": cmd_match,
         "label-sheet": cmd_label_sheet,
