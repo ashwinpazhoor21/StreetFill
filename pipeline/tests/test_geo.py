@@ -101,3 +101,8 @@ def test_densify_edge_cases():
     assert geo.densify([(1, 1), (1, 1)], 5) == [(1, 1)]
     with pytest.raises(ValueError):
         geo.densify([(0, 0), (1, 0)], 0)
+
+
+def test_densify_ignores_float_noise_at_exact_multiples():
+    pts = geo.densify([(0.0, 0.0), (20.000000000583718, 0.0)], 5.0)
+    assert len(pts) == 5

@@ -155,7 +155,8 @@ def densify(points: Sequence[XY], spacing: float) -> list[XY]:
     for i in range(len(points) - 1):
         a, b = points[i], points[i + 1]
         seg = dist_xy(a, b)
-        n = math.ceil(seg / spacing) if seg > 0 else 0
+        # The tolerance stops float noise (20.0000000006 m) adding an extra point.
+        n = math.ceil(seg / spacing - 1e-9) if seg > 0 else 0
         for k in range(1, n):
             t = k / n
             out.append((a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])))
