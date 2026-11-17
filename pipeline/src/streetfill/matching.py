@@ -31,6 +31,7 @@ class MatchConfig:
     gap_split_s: float = 30.0  # split when a gap is longer than this...
     gap_split_m: float = 100.0  # ...and longer than this distance
     densify_m: float = 5.0
+    min_segment_m: float = 30.0  # drop shorter pieces left between jumps (GPS spikes)
 
     # 2. checkpoints
     checkpoint_spacing_m: float = 15.0
@@ -43,6 +44,11 @@ class MatchConfig:
     secondary_bonus_m: float = 5.0
     path_radius_m: float = 15.0
     max_bearing_diff_deg: float = 30.0
+    # The route point must also be alongside the checkpoint: within this distance
+    # of it measured along the street. Without it the 20 m radius reaches past the
+    # 10 m intersection clearance and a run ending at a corner credits the next block.
+    along_track_m: float = 5.0
+    bearing_window_m: float = 10.0  # route direction is taken over ±this much of the route
 
     # 4. ambiguity
     tie_margin_m: float = 3.0
@@ -96,7 +102,8 @@ def clean_route(
       speed above ``max_speed_mps``, or where the gap is longer than both
       ``gap_split_s`` and ``gap_split_m`` (distance alone when times are missing);
     * each segment is densified to ``densify_m``; segments shorter than two points
-      are discarded.
+      are discarded, as are segments shorter than ``min_segment_m`` (what is
+      left between two jumps is noise, not running).
     """
     pts = [
         (projection.to_xy((p.lat, p.lon)), p.time)
@@ -134,7 +141,11 @@ def clean_route(
         current.append(p[0])
     segments.append(current)
 
-    return [densify(seg, cfg.densify_m) for seg in segments if len(seg) >= 2 and polyline_length(seg) > 0]
+    return [
+        densify(seg, cfg.densify_m)
+        for seg in segments
+        if len(seg) >= 2 and polyline_length(seg) > 0 and polyline_length(seg) >= cfg.min_segment_m
+    ]
 
 
 # --- 2. checkpoints --------------------------------------------------------------
@@ -183,9 +194,32 @@ def edge_checkpoints(
     return out
 
 
-def route_bearings(segment: Sequence[XY]) -> list[float]:
-    """Direction of travel at each point of a cleaned segment (central difference)."""
+def route_bearings(segment: Sequence[XY], window_m: float = DEFAULT_CONFIG.bearing_window_m) -> list[float | None]:
+    """Direction of travel at each point of a cleaned segment.
+
+    The direction at a point is the chord from the route ``window_m`` behind it to
+    the route ``window_m`` ahead of it (clamped at the segment ends), which
+    smooths GPS jitter. It is ``None`` where the route doubles back inside the
+    window (the chord is shorter than half the path, i.e. a turn of more than
+    about 120°, such as the far end of an out-and-back): the direction there is
+    meaningless and must not credit a cross street.
+    """
     n = len(segment)
     if n < 2:
-        return [0.0] * n
-    return [bearing_xy_deg(segment[max(0, i - 1)], segment[min(n - 1, i + 1)]) for i in range(n)]
+        return [None] * n
+    cum = [0.0]
+    for a, b in zip(segment, segment[1:]):
+        cum.append(cum[-1] + dist_xy(a, b))
+    out: list[float | None] = []
+    lo = hi = 0
+    for i in range(n):
+        while lo < i and cum[i] - cum[lo + 1] >= window_m:
+            lo += 1
+        hi = max(hi, i)
+        while hi < n - 1 and cum[hi] - cum[i] < window_m:
+            hi += 1
+        a, b = segment[lo], segment[hi]
+        chord = dist_xy(a, b)
+        path = cum[hi] - cum[lo]
+        out.append(None if chord == 0 or chord < 0.5 * path else bearing_xy_deg(a, b))
+    return out
