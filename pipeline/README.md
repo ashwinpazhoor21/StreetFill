@@ -33,16 +33,16 @@ Everything here reads your Health export, so write outputs under `data/` (git-ig
 
 ```bash
 streetfill match       --pack pipeline/out/pack.sqlite --export data/export.zip --out data/match.json
-streetfill label-sheet --pack pipeline/out/pack.sqlite --export data/export.zip --out-dir data/labels --sample 150
+streetfill label-sheet --pack pipeline/out/pack.sqlite --export data/export.zip --out-dir data/labels --sample 150 --path-sample 20
 # open data/labels/edges.geojson in any GeoJSON viewer (it shows the edges and your route traces),
 # then fill the label column of data/labels/labels.csv with ran or not_run (leave blank to skip)
 streetfill evaluate    --labels data/labels/labels.csv --match data/match.json
 streetfill report      --pack pipeline/out/pack.sqlite --match data/match.json --out data/report.html
 ```
 
-`report` writes one self-contained HTML file (an SVG street map coloured by coverage plus a street table). It loads nothing from the network and draws streets only, not your route traces.
+`report` writes one self-contained HTML file: an SVG map coloured by coverage (paths and trails dashed, on top of streets), a street table and a trail table. The street percentage counts streets only; paths and trails have their own totals. It loads nothing from the network and does not draw your route traces.
 
-The label sheet carries no matcher predictions, so labelling stays blind. An edge counts as *predicted ran* when at least half its checkpoints were visited (`--ran-threshold`). Agreement = correct ÷ labelled; recall = found ÷ labelled ran. Gate 1 passes at 95% or higher on both (product plan 5.8, section 14).
+The label sheet carries no matcher predictions, so labelling stays blind. An edge counts as *predicted ran* when at least half its checkpoints were visited (`--ran-threshold`). Agreement = correct ÷ labelled; recall = found ÷ labelled ran. Gate 1 passes at 95% or higher on both (product plan 5.8, section 14). Streets and paths are scored separately: the sheet has a `layer` column, `--sample` and `--path-sample` sample each layer on its own, and `evaluate` prints a street section (the gate) and a paths section (reported only).
 
 ## Personal data
 
