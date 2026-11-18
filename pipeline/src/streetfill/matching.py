@@ -52,6 +52,11 @@ class MatchConfig:
 
     # 4. ambiguity
     tie_margin_m: float = 3.0
+    # Path beside a street (plan 5.4 step 4): when a point is a candidate for both,
+    # and they can be within beside_m of each other, the layer whose geometry the
+    # route follows better over beside_window_m of route (mean distance) wins.
+    beside_m: float = 25.0
+    beside_window_m: float = 100.0
 
     # 5. coverage
     street_complete_frac: float = 0.90
