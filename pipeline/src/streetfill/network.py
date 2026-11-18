@@ -22,7 +22,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 from .geo import LatLon, haversine_m
-from .osm import OsmData, Way, street_ways
+from .osm import ALL_LAYERS, PATH, STREET, OsmData, Way, layered_ways
 
 #: Road classes from most to least important; a street takes its top class.
 CLASS_RANK = (
@@ -48,6 +48,7 @@ class Edge:
     coords: list[LatLon]
     length_m: float
     highway: str
+    layer: str = STREET
 
 
 @dataclass
@@ -57,6 +58,7 @@ class Street:
     highway: str
     edge_ids: list[int] = field(default_factory=list)
     length_m: float = 0.0
+    layer: str = STREET
 
 
 @dataclass
@@ -69,9 +71,18 @@ def normalize_name(name: str) -> str:
     return " ".join(name.split()).casefold()
 
 
-def street_key(way: Way) -> str:
+def street_key(way: Way, layer: str = STREET) -> str:
+    """Grouping key: streets by name, named paths as trails, the rest per OSM way.
+
+    Keys are prefixed per layer so a "Lakefront Trail" path never merges with a
+    street of the same name.
+    """
     name = way.tags.get("name", "").strip()
-    return f"name:{normalize_name(name)}" if name else f"way:{way.id}"
+    if layer == STREET:
+        return f"name:{normalize_name(name)}" if name else f"way:{way.id}"
+    if layer == PATH and name:
+        return f"trail:{normalize_name(name)}"
+    return f"{layer}:way:{way.id}"
 
 
 def _class_rank(highway: str) -> int:
@@ -93,27 +104,39 @@ def _present_runs(way: Way, nodes: dict[int, LatLon]) -> list[list[int]]:
     return [r for r in runs if len(r) >= 2]
 
 
-def build_network(data: OsmData) -> Network:
-    ways = sorted(street_ways(data), key=lambda w: w.id)
-    runs_by_way = [(w, _present_runs(w, data.nodes)) for w in ways]
+def build_network(data: OsmData, layers: tuple[str, ...] = ALL_LAYERS) -> Network:
+    """Split ways into edges and group them, for the requested layers.
 
-    use_count: Counter[int] = Counter()
-    split: set[int] = set()
-    for _, runs in runs_by_way:
+    Splitting is per layer so that adding paths never changes street edges:
+
+    * street ways split at their ends and at nodes shared with other street ways;
+    * path and steps ways split at their ends, at nodes shared with other path or
+      steps ways, and where they touch a street.
+
+    Joining paths to streets for routing is a routing-graph concern (#14).
+    """
+    ways = sorted(layered_ways(data, layers), key=lambda wl: wl[0].id)
+    runs_by_way = [(w, layer, _present_runs(w, data.nodes)) for w, layer in ways]
+
+    street_count: Counter[int] = Counter()
+    other_count: Counter[int] = Counter()
+    for _, layer, runs in runs_by_way:
+        counter = street_count if layer == STREET else other_count
         for run in runs:
-            use_count.update(run[:-1] if run[0] == run[-1] else run)
-            split.add(run[0])
-            split.add(run[-1])
-    split.update(nid for nid, count in use_count.items() if count > 1)
+            counter.update(run[:-1] if run[0] == run[-1] else run)
+    street_split = {nid for nid, c in street_count.items() if c > 1}
+    other_split = {nid for nid, c in other_count.items() if c > 1} | set(street_count)
 
     edges: list[Edge] = []
     streets: dict[str, Street] = {}
-    for way, runs in runs_by_way:
-        key = street_key(way)
+    for way, layer, runs in runs_by_way:
+        key = street_key(way, layer)
         highway = way.tags["highway"]
+        split = street_split if layer == STREET else other_split
         street = streets.get(key)
         if street is None:
-            street = streets[key] = Street(key=key, name=way.tags.get("name", "").strip() or None, highway=highway)
+            name = way.tags.get("name", "").strip() or None
+            street = streets[key] = Street(key=key, name=name, highway=highway, layer=layer)
         elif _class_rank(highway) < _class_rank(street.highway):
             street.highway = highway
 
@@ -135,6 +158,7 @@ def build_network(data: OsmData) -> Network:
                             coords=coords,
                             length_m=length,
                             highway=highway,
+                            layer=layer,
                         )
                         edges.append(edge)
                         street.edge_ids.append(edge.id)

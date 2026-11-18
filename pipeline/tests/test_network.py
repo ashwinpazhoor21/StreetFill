@@ -11,7 +11,8 @@ FIXTURE = Path(__file__).parent / "fixtures" / "mini_area.json"
 
 @pytest.fixture(scope="module")
 def net():
-    return build_network(load_overpass_file(FIXTURE))
+    # Street layer only: these tests are about street splitting and grouping.
+    return build_network(load_overpass_file(FIXTURE), layers=("street",))
 
 
 def edge_nodes(net, way_id):
@@ -111,6 +112,7 @@ def test_output_is_deterministic():
     a = build_network(data)
     data.ways.reverse()
     b = build_network(data)
+    assert len(a.edges) == 13  # 12 street edges plus the footway
     assert [(e.way_id, e.node_ids) for e in a.edges] == [(e.way_id, e.node_ids) for e in b.edges]
 
 

@@ -144,7 +144,10 @@ class Matcher:
             names = dict(con.execute("SELECT id, name FROM streets"))
             edges = [
                 MatchEdge(id=eid, street=sid, highway=hw, coords=decode_geometry(blob))
-                for eid, sid, hw, blob in con.execute("SELECT id, street_id, highway, geometry FROM edges ORDER BY id")
+                for eid, sid, hw, blob in con.execute(
+                    # Streets only until the matcher handles the path layer (#8).
+                    "SELECT id, street_id, highway, geometry FROM edges WHERE layer = 'street' ORDER BY id"
+                )
             ]
         finally:
             con.close()
