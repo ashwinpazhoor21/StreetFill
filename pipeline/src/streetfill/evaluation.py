@@ -88,6 +88,9 @@ def match_export(
             "covered_length_m": round(cov.covered_length_m, 1),
             "total_length_m": round(cov.total_length_m, 1),
             "complete_streets": len(cov.complete_streets),
+            "path_covered_m": round(cov.path_covered_m, 1),
+            "path_length_m": round(cov.path_length_m, 1),
+            "complete_trails": len(cov.complete_trails),
         },
     }
 
