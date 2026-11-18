@@ -33,7 +33,8 @@ def build_parser() -> argparse.ArgumentParser:
     lp.add_argument("--export", required=True)
     lp.add_argument("--out-dir", required=True, help="folder for edges.geojson and labels.csv")
     lp.add_argument("--near-m", type=float, default=50.0, help="include edges this close to a run")
-    lp.add_argument("--sample", type=int, default=None, help="label a random sample of this many edges")
+    lp.add_argument("--sample", type=int, default=None, help="label a random sample of this many street edges")
+    lp.add_argument("--path-sample", type=int, default=None, help="and this many path edges (plan: about 20)")
     lp.add_argument("--seed", type=int, default=1)
 
     ep = sub.add_parser("evaluate", help="agreement and recall of a match result against labels")
@@ -42,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     ep.add_argument("--ran-threshold", type=float, default=0.5,
                     help="fraction of an edge's checkpoints needed to predict 'ran'")
 
-    rp = sub.add_parser("report", help="self-contained HTML map of covered and uncovered streets")
+    rp = sub.add_parser("report", help="self-contained HTML map of covered and uncovered streets and paths")
     rp.add_argument("--pack", required=True)
     rp.add_argument("--match", required=True, help="match result .json")
     rp.add_argument("--out", required=True, help="output .html")
@@ -66,7 +67,8 @@ def cmd_match(args: argparse.Namespace) -> int:
     s = result["summary"]
     km, total = s["covered_length_m"] / 1000, s["total_length_m"] / 1000
     print(f"matched {s['workouts']} workouts: {km:.1f} of {total:.1f} km covered, "
-          f"{s['complete_streets']} streets complete -> {args.out}")
+          f"{s['complete_streets']} streets complete; paths {s['path_covered_m'] / 1000:.1f} of "
+          f"{s['path_length_m'] / 1000:.1f} km, {s['complete_trails']} trails complete -> {args.out}")
     print(PRIVACY_NOTE, file=sys.stderr)
     return 0
 
@@ -79,7 +81,8 @@ def cmd_label_sheet(args: argparse.Namespace) -> int:
     matcher = Matcher.from_pack(args.pack)
     with HealthExport(args.export) as hx:
         geojson, csv_path, n = label_sheet(
-            matcher, hx, args.out_dir, near_m=args.near_m, sample=args.sample, seed=args.seed
+            matcher, hx, args.out_dir, near_m=args.near_m, sample=args.sample,
+            path_sample=args.path_sample, seed=args.seed,
         )
     print(f"{n} edges to label: fill the label column of {csv_path} with ran or not_run")
     print(f"map for reference: {geojson} (edges and your route traces)")
@@ -88,7 +91,7 @@ def cmd_label_sheet(args: argparse.Namespace) -> int:
 
 
 def cmd_evaluate(args: argparse.Namespace) -> int:
-    from .evaluation import evaluate, load_result, predicted_ran, read_labels
+    from .evaluation import edge_layers, evaluate_layers, layered_report, load_result, predicted_ran, read_labels
 
     try:
         labels = read_labels(args.labels)
@@ -96,8 +99,8 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    metrics = evaluate(labels, predicted_ran(result, args.ran_threshold))
-    print(metrics.report())
+    metrics = evaluate_layers(labels, predicted_ran(result, args.ran_threshold), edge_layers(result))
+    print(layered_report(metrics))
     return 0
 
 
@@ -159,7 +162,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     out = write_report(args.pack, result, args.out, ran_threshold=args.ran_threshold)
-    print(f"wrote {out} (opens offline; shows streets only, no route traces)")
+    print(f"wrote {out} (opens offline; paths dashed, no route traces)")
     return 0
 
 

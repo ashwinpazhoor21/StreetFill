@@ -16,6 +16,10 @@ checkpoints were visited across all workouts.
 
 * agreement = correct ÷ labelled
 * recall = found ÷ labelled ``ran`` (found = labelled ran and predicted ran)
+
+Streets and paths are measured separately (plan 5.8: about 150 street edges for
+the gate, plus about 20 path edges reported on their own). The sheet has a
+``layer`` column, and the match result lists which edges are on the path layer.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ from .matching import DEFAULT_CONFIG, MatchConfig, clean_route
 RESULT_SCHEMA = 1
 DEFAULT_RAN_THRESHOLD = 0.5
 DEFAULT_NEAR_M = 50.0
+STREET, PATH = "street", "path"
 
 LABEL_ALIASES = {
     "ran": True,
@@ -83,6 +88,7 @@ def match_export(
         "config": asdict(matcher.cfg),
         "workouts": workouts,
         "edges": {str(eid): [hit, total] for eid, (hit, total) in cov.edges.items()},
+        "path_edges": sorted(eid for eid, e in matcher.edges.items() if e.layer == PATH),
         "summary": {
             "workouts": len(workouts),
             "covered_length_m": round(cov.covered_length_m, 1),
@@ -103,6 +109,12 @@ def load_result(path: str | Path) -> dict:
     return result
 
 
+def edge_layers(result: dict) -> dict[int, str]:
+    """Layer of every edge in a match result. Results without ``path_edges`` are all streets."""
+    paths = set(result.get("path_edges", ()))
+    return {int(eid): PATH if int(eid) in paths else STREET for eid in result["edges"]}
+
+
 def predicted_ran(result: dict, threshold: float = DEFAULT_RAN_THRESHOLD) -> dict[int, bool]:
     out = {}
     for eid, (hit, total) in result["edges"].items():
@@ -119,11 +131,16 @@ def label_sheet(
     *,
     near_m: float = DEFAULT_NEAR_M,
     sample: int | None = None,
+    path_sample: int | None = None,
     seed: int = 1,
     activities: Iterable[str] = DEFAULT_ACTIVITIES,
     cfg: MatchConfig = DEFAULT_CONFIG,
 ) -> tuple[Path, Path, int]:
-    """Write ``edges.geojson`` and ``labels.csv`` for edges within ``near_m`` of any run."""
+    """Write ``edges.geojson`` and ``labels.csv`` for edges within ``near_m`` of any run.
+
+    ``sample`` limits street edges and ``path_sample`` limits path edges; each
+    layer is sampled on its own so paths are not crowded out by streets.
+    """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     proj = matcher.projection
@@ -139,11 +156,16 @@ def label_sheet(
             near |= matcher.edges_near(seg, near_m)
             traces.append((w.start.isoformat(), [proj.to_latlon(p) for p in seg]))
 
-    ids = sorted(near)
-    if sample is not None and len(ids) > sample:
-        ids = sorted(random.Random(seed).sample(ids, sample))
-
     edges = matcher.edges
+    rng = random.Random(seed)
+    ids: list[int] = []
+    for layer, limit in ((STREET, sample), (PATH, path_sample)):
+        layer_ids = sorted(eid for eid in near if edges[eid].layer == layer)
+        if limit is not None and len(layer_ids) > limit:
+            layer_ids = rng.sample(layer_ids, limit)
+        ids.extend(layer_ids)
+    ids.sort()
+
     names = matcher.street_names
     features = []
     for eid in ids:
@@ -152,7 +174,13 @@ def label_sheet(
             {
                 "type": "Feature",
                 "geometry": {"type": "LineString", "coordinates": [[lon, lat] for lat, lon in e.coords]},
-                "properties": {"kind": "edge", "edge_id": eid, "street": names.get(e.street), "highway": e.highway},
+                "properties": {
+                    "kind": "edge",
+                    "edge_id": eid,
+                    "street": names.get(e.street),
+                    "highway": e.highway,
+                    "layer": e.layer,
+                },
             }
         )
     for start, coords in traces:
@@ -170,10 +198,10 @@ def label_sheet(
     csv_path = out_dir / "labels.csv"
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["edge_id", "street", "highway", "length_m", "label"])
+        w.writerow(["edge_id", "street", "highway", "layer", "length_m", "label"])
         for eid in ids:
             e = edges[eid]
-            w.writerow([eid, names.get(e.street) or "", e.highway, f"{matcher.edge_length(eid):.0f}", ""])
+            w.writerow([eid, names.get(e.street) or "", e.highway, e.layer, f"{matcher.edge_length(eid):.0f}", ""])
     return geojson_path, csv_path, len(ids)
 
 
@@ -251,3 +279,26 @@ def evaluate(labels: dict[int, bool], predictions: dict[int, bool]) -> Metrics:
         elif pred:
             m.false_positive.append(eid)
     return m
+
+
+def evaluate_layers(
+    labels: dict[int, bool], predictions: dict[int, bool], layers: dict[int, str]
+) -> dict[str, Metrics]:
+    """Metrics for street edges and path edges separately. Unknown edges count as streets."""
+    split: dict[str, dict[int, bool]] = {STREET: {}, PATH: {}}
+    for eid, truth in labels.items():
+        split[layers.get(eid, STREET)][eid] = truth
+    return {layer: evaluate(sub, predictions) for layer, sub in split.items()}
+
+
+def layered_report(metrics: dict[str, Metrics], target: float = 0.95) -> str:
+    """Streets decide Gate 1; paths are reported on their own (plan 5.8)."""
+    parts = ["Streets (Gate 1)", metrics[STREET].report(target)]
+    paths = metrics[PATH]
+    parts.append("")
+    parts.append("Paths and trails (reported separately, not part of the gate)")
+    if paths.labelled or paths.unknown:
+        parts.append(paths.report(target))
+    else:
+        parts.append("no path edges labelled")
+    return "\n".join(parts)
