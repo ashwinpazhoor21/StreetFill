@@ -85,37 +85,81 @@ def _layer(tags: Mapping[str, str]) -> float:
         return 0.0
 
 
-def is_street(tags: Mapping[str, str]) -> bool:
-    """True if a way with these tags counts toward the street percentage (plan 5.2)."""
+#: Path-layer ``highway`` values (plan 5.2). Bridleways also need explicit foot access.
+PATH_HIGHWAYS = frozenset({"footway", "path", "cycleway", "track", "bridleway"})
+
+#: ``footway`` values mapped beside a street: a run there is credited to the street
+#: through the distance tolerance, so these stay out of both layers.
+SIDEWALK_VALUES = frozenset({"sidewalk", "crossing", "traffic_island", "access_aisle"})
+
+#: The layers a way can belong to. ``steps`` is routable only and never counts.
+STREET, PATH, STEPS = "street", "path", "steps"
+ALL_LAYERS = (STREET, PATH, STEPS)
+
+
+def _closed(tags: Mapping[str, str]) -> bool:
+    """Exclusions shared by every layer: no foot access, private, unbuilt, underground, areas."""
+    foot = tags.get("foot")
+    if foot == "no":
+        return True
+    if tags.get("access") in ACCESS_CLOSED and foot not in FOOT_ALLOWED:
+        return True
+    if _is_yes(tags.get("construction")) or _is_yes(tags.get("proposed")):
+        return True
+    if _is_yes(tags.get("tunnel")) or tags.get("location") == "underground" or _is_yes(tags.get("indoor")):
+        return True
+    if _layer(tags) < 0:
+        return True
+    # Squares and plazas mapped as areas are polygons, not runnable lines.
+    return tags.get("area") == "yes"
+
+
+def way_layer(tags: Mapping[str, str]) -> str | None:
+    """Which pack layer a way belongs to (plan 5.2), or None if it is left out.
+
+    * ``street``: counts toward the street percentage.
+    * ``path``: footways (not sidewalks or crossings), paths, cycleways, tracks,
+      and bridleways with explicit foot access. Counts toward "Paths & trails".
+      Cycleways without a ``foot`` tag are treated as open to runners, the usual
+      US default; ``foot=no`` still excludes them.
+    * ``steps``: routable only, never counted.
+    """
     highway = tags.get("highway")
     foot = tags.get("foot")
-
+    if _closed(tags):
+        return None
     if highway in STREET_HIGHWAYS:
-        pass
-    elif highway == "trunk":
+        return STREET
+    if highway == "trunk":
         # Trunk roads count only where foot access is explicitly allowed.
-        if foot not in FOOT_ALLOWED:
-            return False
-    else:
-        # Motorways, *_link ramps, service, construction, paths and the rest.
-        return False
+        return STREET if foot in FOOT_ALLOWED else None
+    if highway in PATH_HIGHWAYS:
+        if tags.get("footway") in SIDEWALK_VALUES:
+            return None
+        if highway == "bridleway" and foot not in FOOT_ALLOWED:
+            return None
+        return PATH
+    if highway == "steps":
+        return STEPS
+    # Motorways, *_link ramps, service roads, construction and the rest.
+    return None
 
-    if foot == "no":
-        return False
-    if tags.get("access") in ACCESS_CLOSED and foot not in FOOT_ALLOWED:
-        return False
-    if _is_yes(tags.get("construction")) or _is_yes(tags.get("proposed")):
-        return False
-    if _is_yes(tags.get("tunnel")) or tags.get("location") == "underground":
-        return False
-    if _layer(tags) < 0:
-        return False
-    if tags.get("area") == "yes":
-        # Pedestrian squares mapped as areas are polygons, not runnable lines.
-        return False
-    return True
+
+def is_street(tags: Mapping[str, str]) -> bool:
+    """True if a way with these tags counts toward the street percentage (plan 5.2)."""
+    return way_layer(tags) == STREET
 
 
 def street_ways(data: OsmData) -> list[Way]:
     """The ways that count as streets, in input order."""
     return [w for w in data.ways if is_street(w.tags)]
+
+
+def layered_ways(data: OsmData, layers: tuple[str, ...] = ALL_LAYERS) -> list[tuple[Way, str]]:
+    """``(way, layer)`` for every way in one of ``layers``, in input order."""
+    out = []
+    for w in data.ways:
+        layer = way_layer(w.tags)
+        if layer in layers:
+            out.append((w, layer))
+    return out
