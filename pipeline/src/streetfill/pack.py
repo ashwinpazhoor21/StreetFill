@@ -1,7 +1,7 @@
 """Write a street network to a SQLite street pack (product plan 5.3).
 
-Schema version 1 (streets layer only; neighborhoods, paths, elevation and
-highlights arrive in Phase 2):
+Schema version 2 (version 1 had no ``layer`` columns; neighborhoods, elevation
+and highlights arrive later in Phase 2):
 
 ``meta(key TEXT PRIMARY KEY, value TEXT)``
     ``schema_version``, ``pipeline_version``, ``built_at`` (UTC ISO 8601),
@@ -37,7 +37,7 @@ from . import __version__
 from .geo import LatLon, LocalProjection
 from .network import Network
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 GRID_CELL_M = 100.0
 ATTRIBUTION = "© OpenStreetMap contributors"
 
@@ -48,7 +48,8 @@ CREATE TABLE streets (
     key TEXT NOT NULL UNIQUE,
     name TEXT,
     highway TEXT NOT NULL,
-    length_m REAL NOT NULL
+    length_m REAL NOT NULL,
+    layer TEXT NOT NULL
 );
 CREATE TABLE edges (
     id INTEGER PRIMARY KEY,
@@ -58,9 +59,11 @@ CREATE TABLE edges (
     to_node INTEGER NOT NULL,
     highway TEXT NOT NULL,
     length_m REAL NOT NULL,
-    geometry BLOB NOT NULL
+    geometry BLOB NOT NULL,
+    layer TEXT NOT NULL
 );
 CREATE INDEX edges_street ON edges(street_id);
+CREATE INDEX edges_layer ON edges(layer);
 CREATE TABLE grid (
     cell_x INTEGER NOT NULL,
     cell_y INTEGER NOT NULL,
@@ -140,6 +143,8 @@ def write_pack(
         "street_count": str(len(network.streets)),
         "edge_count": str(len(network.edges)),
         "total_length_m": f"{sum(e.length_m for e in network.edges):.2f}",
+        "street_length_m": f"{sum(e.length_m for e in network.edges if e.layer == 'street'):.2f}",
+        "path_length_m": f"{sum(e.length_m for e in network.edges if e.layer == 'path'):.2f}",
     }
 
     con = sqlite3.connect(tmp)
@@ -148,11 +153,11 @@ def write_pack(
             con.executescript(SCHEMA)
             con.executemany("INSERT INTO meta VALUES (?, ?)", meta.items())
             con.executemany(
-                "INSERT INTO streets VALUES (?, ?, ?, ?, ?)",
-                ((street_ids[s.key], s.key, s.name, s.highway, s.length_m) for s in network.streets),
+                "INSERT INTO streets VALUES (?, ?, ?, ?, ?, ?)",
+                ((street_ids[s.key], s.key, s.name, s.highway, s.length_m, s.layer) for s in network.streets),
             )
             con.executemany(
-                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     (
                         e.id,
@@ -163,6 +168,7 @@ def write_pack(
                         e.highway,
                         e.length_m,
                         encode_geometry(e.coords),
+                        e.layer,
                     )
                     for e in network.edges
                 ),

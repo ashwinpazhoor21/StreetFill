@@ -21,9 +21,10 @@ def test_version():
 def test_build_pack_from_saved_json(tmp_path, capsys):
     out = tmp_path / "pack.sqlite"
     assert main(["build-pack", "--osm-json", str(FIXTURE), "--out", str(out)]) == 0
-    assert "7 streets, 12 edges" in capsys.readouterr().out
+    printed = capsys.readouterr().out
+    assert "7 streets" in printed and "1 paths and trails" in printed and "13 edges" in printed
     con = sqlite3.connect(out)
-    assert con.execute("SELECT count(*) FROM edges").fetchone()[0] == 12
+    assert con.execute("SELECT count(*) FROM edges").fetchone()[0] == 13
     con.close()
 
 

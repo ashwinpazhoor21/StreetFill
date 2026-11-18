@@ -136,10 +136,15 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         return 1
     meta = write_pack(network, args.out, bbox=bbox, source=source)
     elapsed = time.perf_counter() - start
-    km = float(meta["total_length_m"]) / 1000
+    layers = {}
+    for st in network.streets:
+        layers[st.layer] = layers.get(st.layer, 0) + 1
+    street_km = float(meta["street_length_m"]) / 1000
+    path_km = float(meta["path_length_m"]) / 1000
     print(
-        f"wrote {args.out}: {meta['street_count']} streets, {meta['edge_count']} edges, "
-        f"{km:.1f} km in {elapsed:.1f}s"
+        f"wrote {args.out}: {layers.get('street', 0)} streets ({street_km:.1f} km), "
+        f"{layers.get('path', 0)} paths and trails ({path_km:.1f} km), "
+        f"{meta['edge_count']} edges in {elapsed:.1f}s"
     )
     return 0
 

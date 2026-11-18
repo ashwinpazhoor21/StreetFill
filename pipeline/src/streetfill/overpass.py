@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-from .osm import STREET_HIGHWAYS
+from .osm import PATH_HIGHWAYS, STREET_HIGHWAYS
 
 DEFAULT_URL = "https://overpass-api.de/api/interpreter"
 USER_AGENT = "streetfill-pipeline (+https://github.com/ashwinpazhoor21/StreetFill)"
@@ -27,13 +27,13 @@ def parse_bbox(text: str) -> BBox:
 
 
 def build_query(bbox: BBox, timeout_s: int = 180) -> str:
-    """Overpass QL for candidate street ways in ``bbox`` plus all their nodes.
+    """Overpass QL for candidate street, path and steps ways in ``bbox`` plus all their nodes.
 
     The server-side filter is only by ``highway`` class to keep downloads small;
     the full rule (foot access, tunnels, layers and so on) runs locally in
     :func:`streetfill.osm.is_street`.
     """
-    classes = "|".join(sorted(STREET_HIGHWAYS | {"trunk"}))
+    classes = "|".join(sorted(STREET_HIGHWAYS | PATH_HIGHWAYS | {"trunk", "steps"}))
     south, west, north, east = bbox
     return (
         f"[out:json][timeout:{timeout_s}];"

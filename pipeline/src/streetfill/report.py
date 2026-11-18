@@ -49,7 +49,9 @@ def _load_pack(path: str | Path):
         streets = {sid: (name, length) for sid, name, length in con.execute("SELECT id, name, length_m FROM streets")}
         edges = [
             _Edge(eid, sid, hw, [proj.to_xy(p) for p in decode_geometry(blob)])
-            for eid, sid, hw, blob in con.execute("SELECT id, street_id, highway, geometry FROM edges ORDER BY id")
+            for eid, sid, hw, blob in con.execute(
+                "SELECT id, street_id, highway, geometry FROM edges WHERE layer = 'street' ORDER BY id"
+            )
         ]
     finally:
         con.close()

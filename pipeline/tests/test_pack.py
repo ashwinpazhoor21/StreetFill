@@ -41,16 +41,23 @@ def test_geometry_round_trip():
 def test_tables_and_counts(pack, net):
     tables = {r[0] for r in pack.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"meta", "streets", "edges", "grid"} <= tables
-    assert pack.execute("SELECT count(*) FROM edges").fetchone()[0] == len(net.edges) == 12
-    assert pack.execute("SELECT count(*) FROM streets").fetchone()[0] == len(net.streets) == 7
+    assert pack.execute("SELECT count(*) FROM edges").fetchone()[0] == len(net.edges) == 13
+    assert pack.execute("SELECT count(*) FROM streets").fetchone()[0] == len(net.streets) == 8
+    layers = dict(pack.execute("SELECT layer, count(*) FROM edges GROUP BY layer"))
+    assert layers == {"street": 12, "path": 1}
+    assert pack.execute("SELECT layer FROM streets WHERE key = 'path:way:311'").fetchone() == ("path",)
 
 
 def test_meta(pack, net):
     meta = dict(pack.execute("SELECT key, value FROM meta"))
-    assert meta["schema_version"] == "1"
+    assert meta["schema_version"] == "2"
     assert meta["attribution"] == "© OpenStreetMap contributors"
-    assert meta["edge_count"] == "12"
+    assert meta["edge_count"] == "13"
     assert float(meta["total_length_m"]) == pytest.approx(sum(e.length_m for e in net.edges), abs=0.01)
+    street = sum(e.length_m for e in net.edges if e.layer == "street")
+    path = sum(e.length_m for e in net.edges if e.layer == "path")
+    assert float(meta["street_length_m"]) == pytest.approx(street, abs=0.01)
+    assert float(meta["path_length_m"]) == pytest.approx(path, abs=0.01) and path > 0
     south, west, north, east = map(float, meta["bbox"].split(","))
     assert south < north and west < east
 
@@ -106,7 +113,7 @@ def test_overwrites_existing_file(net, tmp_path):
     out.write_text("not a database")
     write_pack(net, out)
     con = sqlite3.connect(out)
-    assert con.execute("SELECT count(*) FROM edges").fetchone()[0] == 12
+    assert con.execute("SELECT count(*) FROM edges").fetchone()[0] == 13
     con.close()
     assert not (tmp_path / "pack.sqlite.tmp").exists()
 
