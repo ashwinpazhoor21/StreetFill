@@ -103,7 +103,7 @@ def test_layer_filter():
     assert len(net.streets) == 1
 
 
-def test_pack_layers_and_streets_only_matcher(tmp_path):
+def test_pack_layers_and_matcher_layers(tmp_path):
     net = build_network(LAKEFRONT)
     meta = write_pack(net, tmp_path / "p.sqlite")
     street_m = sum(e.length_m for e in net.edges if e.layer == "street")
@@ -112,7 +112,8 @@ def test_pack_layers_and_streets_only_matcher(tmp_path):
     assert float(meta["path_length_m"]) == pytest.approx(path_m, abs=0.01)
     assert float(meta["total_length_m"]) > street_m + path_m  # steps count in total only
     m = Matcher.from_pack(tmp_path / "p.sqlite")
-    assert {e.highway for e in m.edges.values()} == {"secondary"}  # paths join matching in part 2
+    assert {e.layer for e in m.edges.values()} == {"street", "path"}
+    assert "steps" not in {e.highway for e in m.edges.values()}  # routable only, never matched
 
 
 def test_overpass_query_includes_paths():
