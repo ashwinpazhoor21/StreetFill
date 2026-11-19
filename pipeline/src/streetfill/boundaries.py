@@ -13,6 +13,9 @@ Each piece lies in exactly one neighborhood (or none), so neighborhood lengths
 plus the unassigned length always add up to the city total. Overlapping
 neighborhoods are resolved by input order: the first one wins.
 
+Run this before :func:`streetfill.elevation.add_elevation`: pieces keep their
+parent's ``bridge`` flag but would keep a stale elevation profile.
+
 New nodes at crossings get negative ids (``-1, -2, ...``) so they never clash
 with OSM node ids. Edge ids are renumbered from 1; output order is deterministic.
 """

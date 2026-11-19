@@ -45,6 +45,11 @@ def build_parser() -> argparse.ArgumentParser:
                     help="without OSM neighborhood polygons, leave the pack without neighborhoods instead of "
                          "making approximate regions around place points")
 
+    bp.add_argument("--dem", nargs="+", metavar="ASC",
+                    help="elevation model tiles as ESRI ASCII grids in lon/lat (see pipeline/DATA_SOURCES.md)")
+    bp.add_argument("--dem-source", help="elevation data source, for attribution "
+                                         "(default: USGS 3DEP 1/3 arc-second DEM)")
+
     bq = sub.add_parser("boundary-query", help="print the Overpass query for city and neighborhood boundaries")
     bq.add_argument("--bbox", required=True, help="south,west,north,east")
 
@@ -190,6 +195,19 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         where = " inside the city boundary" if city else ""
         print(f"error: no runnable streets found in the input{where}", file=sys.stderr)
         return 1
+    elevation_note = None
+    if args.dem:
+        from .elevation import Mosaic, add_elevation
+
+        try:
+            dem = Mosaic.load(args.dem)
+        except (OSError, ValueError) as exc:
+            print(f"error: elevation: {exc}", file=sys.stderr)
+            return 2
+        network, covered = add_elevation(network, dem)  # after clipping, so pieces get their own profile
+        elevation_note = f"elevation for {covered} of {len(network.edges)} edges"
+        if covered < len(network.edges):
+            elevation_note += " (the rest are outside the elevation tiles)"
     meta = write_pack(
         network,
         args.out,
@@ -199,6 +217,7 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         city_source=city_source,
         neighborhoods=hoods,
         neighborhood_source=hood_source,
+        elevation_source=args.dem_source,
     )
     elapsed = time.perf_counter() - start
     layers = {}
@@ -213,6 +232,8 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
     )
     if city:
         print(f"clipped to {city.name}")
+    if elevation_note:
+        print(elevation_note)
     if hoods:
         street_m = float(meta["street_length_m"])
         none = float(meta["unassigned_street_length_m"]) / street_m if street_m else 0.0
@@ -236,8 +257,10 @@ CITY_CONFIG_KEYS = {
     "osm_boundaries": "osm_boundaries",
     "fetch_boundaries": "fetch_boundaries",
     "approximate_regions": "approximate_regions",
+    "dem": "dem",
+    "dem_source": "dem_source",
 }
-PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries"}
+PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries", "dem"}
 BUILD_DEFAULTS = {
     "admin_level": "8",
     "neighborhood_id_property": "id",
@@ -245,6 +268,7 @@ BUILD_DEFAULTS = {
     "city_source": "",
     "neighborhood_source": "",
     "approximate_regions": True,
+    "dem_source": "USGS 3DEP 1/3 arc-second DEM",
 }
 
 
@@ -271,7 +295,10 @@ def apply_city_config(args: argparse.Namespace) -> None:
             if key == "bbox" and isinstance(value, list):
                 value = ",".join(str(v) for v in value)
             if key in PATH_KEYS:
-                value = str((path.parent / value).resolve())
+                if key == "dem":
+                    value = [str((path.parent / v).resolve()) for v in ([value] if isinstance(value, str) else value)]
+                else:
+                    value = str((path.parent / value).resolve())
             if key in ("bbox", "osm_json") and (args.bbox or args.osm_json):
                 continue  # the command line already chose the source
             if key in ("osm_boundaries", "fetch_boundaries") and (args.osm_boundaries or args.fetch_boundaries):
