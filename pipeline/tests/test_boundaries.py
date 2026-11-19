@@ -5,7 +5,16 @@ import json
 import pytest
 from test_matcher import GRID, PROJ, make_network
 
-from streetfill.boundaries import Area, area_from_geojson, area_lengths, assign_areas, load_areas, total_length
+from streetfill.boundaries import (
+    Area,
+    _BoundaryIndex,
+    _cut_positions,
+    area_from_geojson,
+    area_lengths,
+    assign_areas,
+    load_areas,
+    total_length,
+)
 
 
 def rect(area_id, x0, y0, x1, y1, holes=()):
@@ -150,3 +159,19 @@ def test_load_areas_from_geojson(tmp_path):
         load_areas(path)
     with pytest.raises(ValueError, match="Polygon"):
         area_from_geojson({"type": "Point", "coordinates": [0, 0]}, "x")
+
+
+def test_crossing_at_a_boundary_vertex_makes_no_sliver():
+    # both ring segments meeting at a vertex report (almost) the same crossing
+    pts = [(13.7, 0), (100, 71.3), (186.1, 0), (100, -63.9), (13.7, 0)]
+    diamond = Area("d", "D", (tuple(PROJ.to_latlon(p) for p in pts),))
+    for y in (0.0, 1e-9):
+        net = make_network([(1, "Long Road", "residential", [(-50.3, y), (250.9, y)])])
+        out = assign(net, city=diamond)
+        assert len(out.edges) == 1
+        assert out.edges[0].length_m == pytest.approx(186.1 - 13.7, rel=1e-6)
+        out = assign(net, neighborhoods=[diamond])
+        assert [e.neighborhood for e in out.edges] == [None, "d", None]
+        assert min(e.length_m for e in out.edges) > 1
+        line_xy = [PROJ.to_xy(p) for p in net.edges[0].coords]
+        assert len(_cut_positions(line_xy, _BoundaryIndex([diamond], PROJ))) == 2  # one cut per vertex

@@ -170,7 +170,16 @@ def _cut_positions(xy: Sequence[XY], index: _BoundaryIndex) -> list[float]:
                 pos = i + t
             if 0 < pos < last:
                 cuts.add(pos)
-    return sorted(cuts)
+    # A line through a boundary vertex meets both ring segments there, at almost
+    # the same point; keep one cut so no sliver edge is created between them.
+    kept: list[float] = []
+    for pos in sorted(cuts):
+        if kept and math.dist(_point_at(xy, kept[-1]), _point_at(xy, pos)) < SNAP_M:
+            if pos.is_integer():
+                kept[-1] = pos  # prefer the existing vertex
+            continue
+        kept.append(pos)
+    return kept
 
 
 def _point_at(xy: Sequence[XY], pos: float) -> XY:
