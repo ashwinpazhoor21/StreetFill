@@ -29,6 +29,18 @@ def build_parser() -> argparse.ArgumentParser:
     bp.add_argument("--neighborhood-id-property", default="id", help="feature property holding the id")
     bp.add_argument("--neighborhood-name-property", default="name", help="feature property holding the name")
     bp.add_argument("--neighborhood-source", default="", help="where the neighborhoods come from, for attribution")
+    osm_b = bp.add_mutually_exclusive_group()
+    osm_b.add_argument("--osm-boundaries", metavar="PATH",
+                       help="saved Overpass JSON of boundaries (see boundary-query); fills in a missing --city "
+                            "or --neighborhoods from OpenStreetMap")
+    osm_b.add_argument("--fetch-boundaries", action="store_true", help="with --bbox: download the boundaries too")
+    bp.add_argument("--save-boundaries", metavar="PATH", help="also save the downloaded boundary JSON")
+    bp.add_argument("--admin-level", default="8", help="OSM admin_level of the city boundary (default 8)")
+    bp.add_argument("--city-osm-name", help="pick the OSM city boundary by name (default: the one containing "
+                                            "the centre of the area)")
+
+    bq = sub.add_parser("boundary-query", help="print the Overpass query for city and neighborhood boundaries")
+    bq.add_argument("--bbox", required=True, help="south,west,north,east")
 
     mp = sub.add_parser("match", help="match every run in a Health export against a pack")
     mp.add_argument("--pack", required=True)
@@ -146,6 +158,17 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         data = load_overpass_file(args.osm_json)
         source = "OpenStreetMap (saved Overpass JSON)"
 
+    city_source, hood_source = args.city_source, args.neighborhood_source
+    if args.osm_boundaries or args.fetch_boundaries:
+        try:
+            doc = _boundary_doc(args, bbox)
+        except (OSError, ValueError) as exc:
+            print(f"error: boundaries: {exc}", file=sys.stderr)
+            return 1 if args.fetch_boundaries else 2
+        city, hoods, city_source, hood_source = _osm_boundaries(
+            args, doc, data, bbox, city, hoods, city_source, hood_source
+        )
+
     network = build_network(data)
     if network.edges and (city or hoods):
         network = assign_areas(network, city=city, neighborhoods=hoods)
@@ -159,9 +182,9 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         bbox=bbox,
         source=source,
         city=city,
-        city_source=args.city_source,
+        city_source=city_source,
         neighborhoods=hoods,
-        neighborhood_source=args.neighborhood_source,
+        neighborhood_source=hood_source,
     )
     elapsed = time.perf_counter() - start
     layers = {}
@@ -201,6 +224,66 @@ def _load_boundaries(args: argparse.Namespace):
     return city, hoods
 
 
+def _boundary_doc(args: argparse.Namespace, bbox):
+    from . import overpass
+
+    if args.osm_boundaries:
+        with open(args.osm_boundaries, encoding="utf-8") as fh:
+            return json.load(fh)
+    if bbox is None:
+        raise ValueError("--fetch-boundaries needs --bbox")
+    url = args.overpass_url or overpass.DEFAULT_URL
+    doc = overpass.fetch(bbox, url=url, query=overpass.build_boundary_query(bbox))
+    if args.save_boundaries:
+        with open(args.save_boundaries, "w", encoding="utf-8") as fh:
+            json.dump(doc, fh)
+    return doc
+
+
+def _osm_boundaries(args, doc, data, bbox, city, hoods, city_source, hood_source):
+    """Fill in whatever the GeoJSON options left out (plan 5.6: official data first, then OSM)."""
+    from .osm_boundaries import find_city, find_neighborhoods, osm_areas
+
+    areas = osm_areas(doc)
+    if city is None:
+        if bbox is not None:
+            centre = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
+        else:
+            lats = [lat for lat, _ in data.nodes.values()] or [0.0]
+            lons = [lon for _, lon in data.nodes.values()] or [0.0]
+            centre = ((min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2)
+        city = find_city(areas, admin_level=args.admin_level, name=args.city_osm_name, point=centre)
+        if city is None:
+            how = f"named {args.city_osm_name!r}" if args.city_osm_name else "containing the area's centre"
+            print(f"warning: no OSM admin_level={args.admin_level} boundary {how}; not clipping", file=sys.stderr)
+        else:
+            city_source = city_source or f"OpenStreetMap ({city.id})"
+            if args.city_name:
+                from dataclasses import replace
+
+                city = replace(city, name=args.city_name)
+    if not hoods:
+        hoods, kind = find_neighborhoods(areas, city)
+        if hoods:
+            hood_source = hood_source or f"OpenStreetMap ({kind})"
+            print(f"neighborhoods from OpenStreetMap: {len(hoods)} ({kind})")
+        else:
+            print("no OpenStreetMap neighborhoods found; the pack has none", file=sys.stderr)
+    return city, hoods, city_source, hood_source
+
+
+def cmd_boundary_query(args: argparse.Namespace) -> int:
+    from . import overpass
+
+    try:
+        bbox = overpass.parse_bbox(args.bbox)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(overpass.build_boundary_query(bbox))
+    return 0
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     from .evaluation import load_result
     from .report import write_report
@@ -224,6 +307,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = {
         "report": cmd_report,
         "build-pack": cmd_build_pack,
+        "boundary-query": cmd_boundary_query,
         "match": cmd_match,
         "label-sheet": cmd_label_sheet,
         "evaluate": cmd_evaluate,
