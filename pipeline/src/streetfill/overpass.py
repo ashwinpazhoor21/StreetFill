@@ -1,4 +1,4 @@
-"""Download OSM street ways for a bounding box from the Overpass API."""
+"""Download OSM street ways and boundaries for a bounding box from the Overpass API."""
 
 from __future__ import annotations
 
@@ -42,9 +42,26 @@ def build_query(bbox: BBox, timeout_s: int = 180) -> str:
     )
 
 
-def fetch(bbox: BBox, url: str = DEFAULT_URL, timeout_s: int = 180) -> dict[str, Any]:
-    """Run the query and return the parsed Overpass JSON document."""
-    body = urllib.parse.urlencode({"data": build_query(bbox, timeout_s)}).encode()
+def build_boundary_query(bbox: BBox, timeout_s: int = 180) -> str:
+    """Overpass QL for city and neighborhood outlines touching ``bbox``, with full geometry.
+
+    ``out geom`` puts each member way's coordinates inline, so relations that
+    reach outside the box still come back whole.
+    """
+    south, west, north, east = bbox
+    b = f"({south},{west},{north},{east})"
+    return (
+        f"[out:json][timeout:{timeout_s}];("
+        f'relation["boundary"="administrative"]["admin_level"~"^(8|9|10)$"]{b};'
+        f'relation["place"~"^(neighbourhood|quarter|suburb)$"]{b};'
+        f'way["place"~"^(neighbourhood|quarter|suburb)$"]{b};'
+        ");out geom;"
+    )
+
+
+def fetch(bbox: BBox, url: str = DEFAULT_URL, timeout_s: int = 180, query: str | None = None) -> dict[str, Any]:
+    """Run the street query (or ``query``) and return the parsed Overpass JSON document."""
+    body = urllib.parse.urlencode({"data": query or build_query(bbox, timeout_s)}).encode()
     req = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=timeout_s + 30) as resp:
         return json.load(resp)
