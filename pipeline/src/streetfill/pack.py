@@ -1,7 +1,8 @@
 """Write a street network to a SQLite street pack (product plan 5.3).
 
-Schema version 3 (version 1 had no ``layer`` columns, version 2 no
-neighborhoods; elevation and highlights arrive later in Phase 2):
+Schema version 4 (version 1 had no ``layer`` columns, version 2 no
+neighborhoods, version 3 no elevation; scenery and highlights arrive later in
+Phase 2):
 
 ``meta(key TEXT PRIMARY KEY, value TEXT)``
     ``schema_version``, ``pipeline_version``, ``built_at`` (UTC ISO 8601),
@@ -9,7 +10,9 @@ neighborhoods; elevation and highlights arrive later in Phase 2):
     ``origin_lat``/``origin_lon`` (local projection origin), ``grid_cell_m``,
     ``street_count``, ``edge_count``, ``total_length_m``, ``street_length_m``,
     ``path_length_m``, ``neighborhood_count``, ``unassigned_street_length_m``.
-    When the pack is clipped to a city: ``city_id``, ``city_name``,
+    ``elevation_source``, ``elevation_spacing_m`` and ``elevation_edge_count``
+    (0 when the pack was built without an elevation model). When the pack is
+    clipped to a city: ``city_id``, ``city_name``,
     ``city_source`` and ``city_rings``. With neighborhoods: ``neighborhood_source``.
 
 ``neighborhoods(id, key, name, street_length_m, path_length_m, rings)``
@@ -22,11 +25,16 @@ neighborhoods; elevation and highlights arrive later in Phase 2):
 ``streets(id, key, name, highway, length_m)``
     One row per street. ``key`` is ``name:<normalized name>`` or ``way:<osm id>``.
 
-``edges(id, street_id, way_id, from_node, to_node, highway, length_m, geometry, layer, neighborhood_id)``
+``edges(id, street_id, way_id, from_node, to_node, highway, length_m, geometry, layer, neighborhood_id, bridge, elevation, gain_m, loss_m)``
     ``geometry`` is a BLOB of little-endian float64 ``(lat, lon)`` pairs, which
     keeps full precision and is trivial to read in Swift. ``neighborhood_id``
     is NULL for edges in no neighborhood. Negative node ids are boundary
-    crossings added by the pipeline, not OSM nodes.
+    crossings added by the pipeline, not OSM nodes. ``bridge`` is 1 for bridges
+    and piers. ``elevation`` is a BLOB of little-endian int16 whole decimetres,
+    sampled evenly about ``elevation_spacing_m`` apart from ``from_node`` to
+    ``to_node`` with both ends included (``streetfill.elevation``); ``gain_m``
+    and ``loss_m`` are summed from it in that direction (swap them for the
+    other way). All three are NULL where the model has no data.
 
 ``grid(cell_x, cell_y, edge_id)``
     Spatial index. Cells are ``grid_cell_m`` squares in the local projection
@@ -53,7 +61,7 @@ from .network import Network
 if TYPE_CHECKING:
     from .boundaries import Area
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 GRID_CELL_M = 100.0
 ATTRIBUTION = "© OpenStreetMap contributors"
 
@@ -85,7 +93,11 @@ CREATE TABLE edges (
     length_m REAL NOT NULL,
     geometry BLOB NOT NULL,
     layer TEXT NOT NULL,
-    neighborhood_id INTEGER REFERENCES neighborhoods(id)
+    neighborhood_id INTEGER REFERENCES neighborhoods(id),
+    bridge INTEGER NOT NULL DEFAULT 0,
+    elevation BLOB,
+    gain_m REAL,
+    loss_m REAL
 );
 CREATE INDEX edges_street ON edges(street_id);
 CREATE INDEX edges_layer ON edges(layer);
@@ -128,11 +140,32 @@ def edge_cells(
     return cells
 
 
+def encode_elevation(profile: Iterable[float]) -> bytes:
+    """Metres to little-endian int16 whole decimetres (enough for -3276.8 m to 3276.7 m)."""
+    dm = [round(v * 10) for v in profile]
+    if any(not -32768 <= v <= 32767 for v in dm):
+        raise ValueError("elevation outside the int16 decimetre range")
+    return struct.pack(f"<{len(dm)}h", *dm)
+
+
+def decode_elevation(blob: bytes) -> list[float]:
+    return [v / 10 for v in struct.unpack(f"<{len(blob) // 2}h", blob)]
+
+
 def rings_json(rings: Iterable[Iterable[LatLon]]) -> str:
     """Compact JSON for boundary rings: ``[[[lon, lat], ...], ...]``, 7 decimals (about 1 cm)."""
     return json.dumps(
         [[[round(lon, 7), round(lat, 7)] for lat, lon in ring] for ring in rings], separators=(",", ":")
     )
+
+
+def _elevation_columns(profile):
+    if profile is None:
+        return None, None, None
+    from .elevation import gain_loss
+
+    gain, loss = gain_loss(profile)
+    return encode_elevation(profile), gain, loss
 
 
 def network_bbox(network: Network) -> tuple[float, float, float, float]:
@@ -152,6 +185,8 @@ def write_pack(
     city_source: str = "",
     neighborhoods: Sequence[Area] = (),
     neighborhood_source: str = "",
+    elevation_source: str = "",
+    elevation_spacing_m: float | None = None,
 ) -> dict[str, str]:
     """Write ``network`` to a new SQLite file at ``out`` and return its meta.
 
@@ -202,7 +237,13 @@ def write_pack(
         "path_length_m": f"{sum(e.length_m for e in network.edges if e.layer == 'path'):.2f}",
         "neighborhood_count": str(len(neighborhoods)),
         "unassigned_street_length_m": f"{unassigned_m:.2f}",
+        "elevation_edge_count": str(sum(1 for e in network.edges if e.elevation is not None)),
     }
+    if meta["elevation_edge_count"] != "0":
+        from .elevation import SPACING_M
+
+        meta["elevation_source"] = elevation_source
+        meta["elevation_spacing_m"] = repr(elevation_spacing_m or SPACING_M)
     if city is not None:
         meta.update(city_id=city.id, city_name=city.name, city_source=city_source, city_rings=rings_json(city.rings))
     if neighborhoods:
@@ -225,7 +266,7 @@ def write_pack(
                 ((street_ids[s.key], s.key, s.name, s.highway, s.length_m, s.layer) for s in network.streets),
             )
             con.executemany(
-                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     (
                         e.id,
@@ -238,6 +279,8 @@ def write_pack(
                         encode_geometry(e.coords),
                         e.layer,
                         hood_ids.get(e.neighborhood) if e.neighborhood is not None else None,
+                        int(e.bridge),
+                        *_elevation_columns(e.elevation),
                     )
                     for e in network.edges
                 ),
