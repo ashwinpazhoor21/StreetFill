@@ -22,6 +22,13 @@ def build_parser() -> argparse.ArgumentParser:
     bp.add_argument("--out", required=True, help="output .sqlite path")
     bp.add_argument("--save-osm", metavar="PATH", help="also save the downloaded Overpass JSON")
     bp.add_argument("--overpass-url", default=None, help="Overpass interpreter URL")
+    bp.add_argument("--city", metavar="GEOJSON", help="clip to this city boundary (all features' polygons)")
+    bp.add_argument("--city-name", help="city name (default: the first feature's name property)")
+    bp.add_argument("--city-source", default="", help="where the city boundary comes from, for attribution")
+    bp.add_argument("--neighborhoods", metavar="GEOJSON", help="split edges by these neighborhood polygons")
+    bp.add_argument("--neighborhood-id-property", default="id", help="feature property holding the id")
+    bp.add_argument("--neighborhood-name-property", default="name", help="feature property holding the name")
+    bp.add_argument("--neighborhood-source", default="", help="where the neighborhoods come from, for attribution")
 
     mp = sub.add_parser("match", help="match every run in a Health export against a pack")
     mp.add_argument("--pack", required=True)
@@ -106,11 +113,17 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
 
 def cmd_build_pack(args: argparse.Namespace) -> int:
     from . import overpass
+    from .boundaries import assign_areas
     from .network import build_network
     from .osm import load_overpass_file, parse_overpass
     from .pack import write_pack
 
     start = time.perf_counter()
+    try:
+        city, hoods = _load_boundaries(args)
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     bbox = None
     if args.bbox:
         try:
@@ -134,10 +147,22 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         source = "OpenStreetMap (saved Overpass JSON)"
 
     network = build_network(data)
+    if network.edges and (city or hoods):
+        network = assign_areas(network, city=city, neighborhoods=hoods)
     if not network.edges:
-        print("error: no runnable streets found in the input", file=sys.stderr)
+        where = " inside the city boundary" if city else ""
+        print(f"error: no runnable streets found in the input{where}", file=sys.stderr)
         return 1
-    meta = write_pack(network, args.out, bbox=bbox, source=source)
+    meta = write_pack(
+        network,
+        args.out,
+        bbox=bbox,
+        source=source,
+        city=city,
+        city_source=args.city_source,
+        neighborhoods=hoods,
+        neighborhood_source=args.neighborhood_source,
+    )
     elapsed = time.perf_counter() - start
     layers = {}
     for st in network.streets:
@@ -149,7 +174,31 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         f"{layers.get('path', 0)} paths and trails ({path_km:.1f} km), "
         f"{meta['edge_count']} edges in {elapsed:.1f}s"
     )
+    if city:
+        print(f"clipped to {city.name}")
+    if hoods:
+        street_m = float(meta["street_length_m"])
+        none = float(meta["unassigned_street_length_m"]) / street_m if street_m else 0.0
+        print(f"{len(hoods)} neighborhoods; {none:.1%} of street length is in none of them")
     return 0
+
+
+def _load_boundaries(args: argparse.Namespace):
+    from dataclasses import replace
+
+    from .boundaries import load_areas
+
+    city = None
+    if args.city:
+        parts = load_areas(args.city)
+        rings = tuple(r for a in parts for r in a.rings)
+        first = parts[0]
+        named = first.name != first.id  # load_areas falls back to the id when there is no name
+        city = replace(first, name=args.city_name or (first.name if named else "City"), rings=rings)
+    hoods = []
+    if args.neighborhoods:
+        hoods = load_areas(args.neighborhoods, args.neighborhood_id_property, args.neighborhood_name_property)
+    return city, hoods
 
 
 def cmd_report(args: argparse.Namespace) -> int:

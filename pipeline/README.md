@@ -25,6 +25,17 @@ streetfill build-pack --osm-json pipeline/out/area.json --out pipeline/out/pack.
 
 The pack format (schema v2: `meta`, `streets`, `edges`, `grid`, each street and edge tagged with a `layer`) is documented at the top of `src/streetfill/pack.py`. Layers follow product plan 5.2: `street` counts toward the street percentage; `path` (footways other than sidewalks and crossings, paths, cycleways, tracks, bridleways with foot access) counts toward Paths & trails, and named paths become trails; `steps` is routable only. Packs carry OpenStreetMap data, © OpenStreetMap contributors, under the ODbL. `pipeline/out/` is git-ignored.
 
+### City boundary and neighborhoods
+
+```bash
+streetfill build-pack --osm-json pipeline/out/area.json --out pipeline/out/pack.sqlite \
+  --city pipeline/out/city.geojson --city-source "OpenStreetMap" \
+  --neighborhoods pipeline/out/areas.geojson --neighborhood-id-property id --neighborhood-name-property name \
+  --neighborhood-source "City open data portal"
+```
+
+Both files are GeoJSON polygons or multipolygons. Edges are cut where they cross a boundary. Pieces outside the city are dropped, and each piece is tagged with the neighborhood that contains it (schema v3: a `neighborhoods` table and `edges.neighborhood_id`). Neighborhood lengths plus the unassigned length add up to the city total, and `build-pack` prints the unassigned share. Check the licence of any neighborhood data before you publish a pack built from it (product plan 5.6). Reading the boundaries straight from OSM is coming next (#9).
+
 The public Overpass server can be slow or rate-limited. If a download fails, retry later, pass another server with `--overpass-url`, or export the area as Overpass JSON yourself and use `--osm-json`.
 
 ## Gate 1: measure matching accuracy
