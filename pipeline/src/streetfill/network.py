@@ -49,6 +49,7 @@ class Edge:
     length_m: float
     highway: str
     layer: str = STREET
+    neighborhood: str | None = None  # set by boundaries.assign_areas
 
 
 @dataclass
