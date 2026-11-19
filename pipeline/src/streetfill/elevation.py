@@ -26,6 +26,7 @@ For each edge:
 from __future__ import annotations
 
 import math
+from array import array
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -44,7 +45,7 @@ class AsciiGrid:
     south: float  # lat of the bottom edge of the last row
     cellsize: float  # degrees
     nodata: float | None
-    values: list[list[float]]  # rows from north to south
+    values: array  # float64, row-major from the north-west corner (about 140 MB for a big city)
 
     @classmethod
     def load(cls, path: str | Path) -> "AsciiGrid":
@@ -72,19 +73,19 @@ class AsciiGrid:
             else:
                 raise ValueError(f"{path}: needs xllcorner/yllcorner or xllcenter/yllcenter")
             nodata = float(header["nodata_value"]) if "nodata_value" in header else None
-            numbers = [float(v) for v in line.split()]
-            numbers += [float(v) for v in fh.read().split()]
-        if len(numbers) != ncols * nrows:
-            raise ValueError(f"{path}: expected {ncols * nrows} values, found {len(numbers)}")
-        if not (-180 <= west <= 180 and -90 <= south <= 90 and cellsize < 1):
-            raise ValueError(f"{path}: the grid must be in geographic lon/lat degrees")
-        values = [numbers[r * ncols : (r + 1) * ncols] for r in range(nrows)]
+            if not (-180 <= west <= 180 and -90 <= south <= 90 and cellsize < 1):
+                raise ValueError(f"{path}: the grid must be in geographic lon/lat degrees")
+            values = array("d", map(float, line.split()))
+            for row in fh:  # line by line, so a city-sized grid never sits in memory as text
+                values.extend(map(float, row.split()))
+        if len(values) != ncols * nrows:
+            raise ValueError(f"{path}: expected {ncols * nrows} values, found {len(values)}")
         return cls(ncols, nrows, west, south, cellsize, nodata, values)
 
     def _value(self, row: int, col: int) -> float | None:
         if not (0 <= row < self.nrows and 0 <= col < self.ncols):
             return None
-        v = self.values[row][col]
+        v = self.values[row * self.ncols + col]
         return None if self.nodata is not None and v == self.nodata else v
 
     def sample(self, lat: float, lon: float) -> float | None:

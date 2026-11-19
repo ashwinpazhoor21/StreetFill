@@ -42,6 +42,10 @@ Per-city settings live in `pipeline/cities/<city>.json`. A config can set any of
 streetfill build-pack --city-config pipeline/cities/chicago.json --out pipeline/out/chicago.sqlite
 ```
 
+### Elevation
+
+`--dem tile.asc [...]` adds an elevation profile to every edge (one sample about every 30 m, bridges interpolated, whole decimetres), plus gain and loss in each direction (schema v4). Tiles are ESRI ASCII grids in lon/lat. See [DATA_SOURCES.md](DATA_SOURCES.md) for preparing USGS 3DEP tiles, and for the licence of every data source.
+
 The public Overpass server can be slow or rate-limited. If a download fails, retry later, pass another server with `--overpass-url`, or export the area as Overpass JSON yourself and use `--osm-json`.
 
 ## Gate 1: measure matching accuracy
