@@ -65,9 +65,11 @@ def test_build_pack_rejects_bad_bbox(tmp_path, capsys):
     assert "bbox" in capsys.readouterr().err
 
 
-def test_build_pack_needs_a_source(tmp_path):
-    with pytest.raises(SystemExit):
-        main(["build-pack", "--out", str(tmp_path / "p")])
+def test_build_pack_needs_a_source(tmp_path, capsys):
+    assert main(["build-pack", "--out", str(tmp_path / "p")]) == 2
+    assert "give --bbox or --osm-json" in capsys.readouterr().err
+    with pytest.raises(SystemExit):  # but not both
+        main(["build-pack", "--bbox", "1,2,3,4", "--osm-json", "x", "--out", str(tmp_path / "p")])
 
 
 def test_build_pack_fails_cleanly_without_streets(tmp_path, capsys):

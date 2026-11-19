@@ -43,7 +43,7 @@ def build_query(bbox: BBox, timeout_s: int = 180) -> str:
 
 
 def build_boundary_query(bbox: BBox, timeout_s: int = 180) -> str:
-    """Overpass QL for city and neighborhood outlines touching ``bbox``, with full geometry.
+    """Overpass QL for city and neighborhood outlines and place points in ``bbox``, with full geometry.
 
     ``out geom`` puts each member way's coordinates inline, so relations that
     reach outside the box still come back whole.
@@ -55,6 +55,7 @@ def build_boundary_query(bbox: BBox, timeout_s: int = 180) -> str:
         f'relation["boundary"="administrative"]["admin_level"~"^(8|9|10)$"]{b};'
         f'relation["place"~"^(neighbourhood|quarter|suburb)$"]{b};'
         f'way["place"~"^(neighbourhood|quarter|suburb)$"]{b};'
+        f'node["place"~"^(neighbourhood|quarter|suburb)$"]{b};'
         ");out geom;"
     )
 
