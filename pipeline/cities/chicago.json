@@ -1,0 +1,8 @@
+{
+  "comment": "Launch city. admin_level 8 for Chicago is [Unverified]; check the first build visually (plan 5.7). The 77 community areas from the City's open data portal are not used until their licence is checked (plan 5.6, #13), so neighborhoods come from OpenStreetMap.",
+  "name": "Chicago",
+  "bbox": "41.644,-87.940,42.023,-87.524",
+  "admin_level": "8",
+  "osm_name": "Chicago",
+  "fetch_boundaries": true
+}

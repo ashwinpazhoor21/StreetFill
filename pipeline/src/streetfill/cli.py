@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 import time
+from pathlib import Path
 
 from . import __version__
 
@@ -16,28 +17,33 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", metavar="<command>")
 
     bp = sub.add_parser("build-pack", help="build a SQLite street pack from OpenStreetMap")
-    src = bp.add_mutually_exclusive_group(required=True)
+    src = bp.add_mutually_exclusive_group()
     src.add_argument("--bbox", help="download from Overpass: south,west,north,east")
     src.add_argument("--osm-json", metavar="PATH", help="use a saved Overpass JSON file")
     bp.add_argument("--out", required=True, help="output .sqlite path")
+    bp.add_argument("--city-config", metavar="JSON",
+                    help="per-city settings (see pipeline/cities/); options given on the command line win")
     bp.add_argument("--save-osm", metavar="PATH", help="also save the downloaded Overpass JSON")
     bp.add_argument("--overpass-url", default=None, help="Overpass interpreter URL")
     bp.add_argument("--city", metavar="GEOJSON", help="clip to this city boundary (all features' polygons)")
     bp.add_argument("--city-name", help="city name (default: the first feature's name property)")
-    bp.add_argument("--city-source", default="", help="where the city boundary comes from, for attribution")
+    bp.add_argument("--city-source", help="where the city boundary comes from, for attribution")
     bp.add_argument("--neighborhoods", metavar="GEOJSON", help="split edges by these neighborhood polygons")
-    bp.add_argument("--neighborhood-id-property", default="id", help="feature property holding the id")
-    bp.add_argument("--neighborhood-name-property", default="name", help="feature property holding the name")
-    bp.add_argument("--neighborhood-source", default="", help="where the neighborhoods come from, for attribution")
+    bp.add_argument("--neighborhood-id-property", help="feature property holding the id (default id)")
+    bp.add_argument("--neighborhood-name-property", help="feature property holding the name (default name)")
+    bp.add_argument("--neighborhood-source", help="where the neighborhoods come from, for attribution")
     osm_b = bp.add_mutually_exclusive_group()
     osm_b.add_argument("--osm-boundaries", metavar="PATH",
                        help="saved Overpass JSON of boundaries (see boundary-query); fills in a missing --city "
                             "or --neighborhoods from OpenStreetMap")
     osm_b.add_argument("--fetch-boundaries", action="store_true", help="with --bbox: download the boundaries too")
     bp.add_argument("--save-boundaries", metavar="PATH", help="also save the downloaded boundary JSON")
-    bp.add_argument("--admin-level", default="8", help="OSM admin_level of the city boundary (default 8)")
+    bp.add_argument("--admin-level", help="OSM admin_level of the city boundary (default 8)")
     bp.add_argument("--city-osm-name", help="pick the OSM city boundary by name (default: the one containing "
                                             "the centre of the area)")
+    bp.add_argument("--no-approximate-regions", dest="approximate_regions", action="store_false", default=None,
+                    help="without OSM neighborhood polygons, leave the pack without neighborhoods instead of "
+                         "making approximate regions around place points")
 
     bq = sub.add_parser("boundary-query", help="print the Overpass query for city and neighborhood boundaries")
     bq.add_argument("--bbox", required=True, help="south,west,north,east")
@@ -132,6 +138,14 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
 
     start = time.perf_counter()
     try:
+        apply_city_config(args)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if not args.bbox and not args.osm_json:
+        print("error: give --bbox or --osm-json (or a bbox in --city-config)", file=sys.stderr)
+        return 2
+    try:
         city, hoods = _load_boundaries(args)
     except (OSError, ValueError, KeyError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -206,6 +220,68 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
     return 0
 
 
+#: Keys a --city-config file may set, and the build-pack option each one fills in.
+CITY_CONFIG_KEYS = {
+    "name": "city_name",
+    "bbox": "bbox",
+    "osm_json": "osm_json",
+    "admin_level": "admin_level",
+    "osm_name": "city_osm_name",
+    "city": "city",
+    "city_source": "city_source",
+    "neighborhoods": "neighborhoods",
+    "neighborhood_id_property": "neighborhood_id_property",
+    "neighborhood_name_property": "neighborhood_name_property",
+    "neighborhood_source": "neighborhood_source",
+    "osm_boundaries": "osm_boundaries",
+    "fetch_boundaries": "fetch_boundaries",
+    "approximate_regions": "approximate_regions",
+}
+PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries"}
+BUILD_DEFAULTS = {
+    "admin_level": "8",
+    "neighborhood_id_property": "id",
+    "neighborhood_name_property": "name",
+    "city_source": "",
+    "neighborhood_source": "",
+    "approximate_regions": True,
+}
+
+
+def apply_city_config(args: argparse.Namespace) -> None:
+    """Fill options the command line left unset from ``--city-config``, then apply defaults.
+
+    Relative paths in the config are relative to the config file.
+    """
+    if getattr(args, "city_config", None):
+        path = Path(args.city_config)
+        with open(path, encoding="utf-8") as fh:
+            cfg = json.load(fh)
+        if not isinstance(cfg, dict):
+            raise ValueError(f"{path}: expected a JSON object")
+        unknown = sorted(set(cfg) - CITY_CONFIG_KEYS.keys() - {"comment"})
+        if "bbox" in cfg and "osm_json" in cfg:
+            raise ValueError(f"{path}: give bbox or osm_json, not both")
+        if unknown:
+            raise ValueError(f"{path}: unknown keys {unknown}")
+        for key, attr in CITY_CONFIG_KEYS.items():
+            if key not in cfg or getattr(args, attr, None) not in (None, False):
+                continue
+            value = cfg[key]
+            if key == "bbox" and isinstance(value, list):
+                value = ",".join(str(v) for v in value)
+            if key in PATH_KEYS:
+                value = str((path.parent / value).resolve())
+            if key in ("bbox", "osm_json") and (args.bbox or args.osm_json):
+                continue  # the command line already chose the source
+            if key in ("osm_boundaries", "fetch_boundaries") and (args.osm_boundaries or args.fetch_boundaries):
+                continue  # likewise for the boundary source
+            setattr(args, attr, value)
+    for attr, default in BUILD_DEFAULTS.items():
+        if getattr(args, attr, None) is None:
+            setattr(args, attr, default)
+
+
 def _load_boundaries(args: argparse.Namespace):
     from dataclasses import replace
 
@@ -242,7 +318,7 @@ def _boundary_doc(args: argparse.Namespace, bbox):
 
 def _osm_boundaries(args, doc, data, bbox, city, hoods, city_source, hood_source):
     """Fill in whatever the GeoJSON options left out (plan 5.6: official data first, then OSM)."""
-    from .osm_boundaries import find_city, find_neighborhoods, osm_areas
+    from .osm_boundaries import approximate_regions, find_city, find_neighborhoods, osm_areas, place_points
 
     areas = osm_areas(doc)
     if city is None:
@@ -267,7 +343,12 @@ def _osm_boundaries(args, doc, data, bbox, city, hoods, city_source, hood_source
         if hoods:
             hood_source = hood_source or f"OpenStreetMap ({kind})"
             print(f"neighborhoods from OpenStreetMap: {len(hoods)} ({kind})")
-        else:
+        elif args.approximate_regions:
+            hoods, kind = approximate_regions(place_points(doc), city)
+            if hoods:
+                hood_source = hood_source or f"OpenStreetMap {kind}, approximate regions"
+                print(f"approximate neighborhoods around OpenStreetMap {kind}: {len(hoods)}")
+        if not hoods:
             print("no OpenStreetMap neighborhoods found; the pack has none", file=sys.stderr)
     return city, hoods, city_source, hood_source
 

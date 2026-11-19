@@ -11,6 +11,8 @@ member ways and nodes as separate elements work too.
   kinds that has at least two members: ``place=neighbourhood``,
   ``place=quarter``, ``place=suburb``, ``admin_level=10``, ``admin_level=9``.
   Mixing kinds would double-count, because suburbs contain neighbourhoods.
+  Without polygons, :func:`approximate_regions` makes Voronoi cells around
+  named place points instead.
 
 Member ways are joined end to end into closed rings, separately for ``outer``
 and ``inner`` roles; a relation whose rings do not close is skipped.
@@ -172,4 +174,84 @@ def find_neighborhoods(areas: Sequence[OsmArea], city: Area | None) -> tuple[lis
         ]
         if len(found) >= 2:
             return found, f"{key}={value}"
+    return [], None
+
+
+# --- approximate regions around place points (the last step before "none") ---------
+
+PLACE_POINT_KINDS = ("neighbourhood", "quarter", "suburb")
+
+
+@dataclass(frozen=True)
+class PlacePoint:
+    id: str
+    name: str
+    kind: str
+    point: LatLon
+
+
+def place_points(doc: Mapping[str, Any]) -> list[PlacePoint]:
+    """Named ``place=neighbourhood|quarter|suburb`` nodes, sorted by id."""
+    out = []
+    for el in doc.get("elements", []):
+        tags = el.get("tags", {})
+        if el.get("type") == "node" and tags.get("place") in PLACE_POINT_KINDS and tags.get("name") and "lat" in el:
+            out.append(PlacePoint(f"node/{el['id']}", tags["name"], tags["place"], (float(el["lat"]), float(el["lon"]))))
+    return sorted(out, key=lambda p: int(p.id.split("/")[1]))
+
+
+def _clip_half_plane(poly: list[tuple[float, float]], a: tuple[float, float], b: tuple[float, float]):
+    """Keep the part of convex ``poly`` closer to site ``a`` than to site ``b`` (Sutherland–Hodgman)."""
+    mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+    nx, ny = b[0] - a[0], b[1] - a[1]
+
+    def side(p):  # < 0 on a's side of the bisector
+        return (p[0] - mx) * nx + (p[1] - my) * ny
+
+    out = []
+    for i, p in enumerate(poly):
+        q = poly[(i + 1) % len(poly)]
+        sp, sq = side(p), side(q)
+        if sp <= 0:
+            out.append(p)
+        if (sp < 0 < sq) or (sq < 0 < sp):
+            t = sp / (sp - sq)
+            out.append((p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t))
+    return out
+
+
+def approximate_regions(
+    points: Sequence[PlacePoint], city: Area | None, *, pad_m: float = 500.0
+) -> tuple[list[Area], str | None]:
+    """Voronoi cells around place points inside ``city``, of the first kind with at least two.
+
+    Cells are cut to the city's bounding box (plus ``pad_m``); clipping the
+    network to the city itself is :func:`streetfill.boundaries.assign_areas`'s job.
+    The regions are approximate, which the pack's ``neighborhood_source`` says.
+    """
+    in_city = _Container(city) if city is not None else None
+    for kind in PLACE_POINT_KINDS:
+        sites, seen = [], set()
+        for p in points:
+            if p.kind == kind and p.point not in seen and (in_city is None or in_city(p.point)):
+                seen.add(p.point)  # two places at one point would share a cell; keep the first
+                sites.append(p)
+        if len(sites) < 2:
+            continue
+        frame = [pt for ring in city.rings for pt in ring] if city is not None else [p.point for p in sites]
+        proj = LocalProjection.for_points(frame)
+        xy = [proj.to_xy(p) for p in frame]
+        x0, x1 = min(x for x, _ in xy) - pad_m, max(x for x, _ in xy) + pad_m
+        y0, y1 = min(y for _, y in xy) - pad_m, max(y for _, y in xy) + pad_m
+        site_xy = [proj.to_xy(s.point) for s in sites]
+        regions = []
+        for i, s in enumerate(sites):
+            cell = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+            for j, other in enumerate(site_xy):
+                if j != i and cell:
+                    cell = _clip_half_plane(cell, site_xy[i], other)
+            if len(cell) >= 3:
+                ring = tuple(proj.to_latlon(p) for p in cell + [cell[0]])
+                regions.append(Area(s.id, s.name, (ring,)))
+        return regions, f"place={kind} points"
     return [], None
