@@ -22,7 +22,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 from .geo import LatLon, haversine_m
-from .osm import ALL_LAYERS, PATH, STREET, OsmData, Way, layered_ways
+from .osm import ALL_LAYERS, PATH, STREET, OsmData, Way, _is_yes, layered_ways
 
 #: Road classes from most to least important; a street takes its top class.
 CLASS_RANK = (
@@ -50,6 +50,8 @@ class Edge:
     highway: str
     layer: str = STREET
     neighborhood: str | None = None  # set by boundaries.assign_areas
+    bridge: bool = False  # bridge or pier: elevation is interpolated, not sampled
+    elevation: list[float] | None = None  # set by elevation.add_elevation; metres, whole decimetres
 
 
 @dataclass
@@ -133,6 +135,7 @@ def build_network(data: OsmData, layers: tuple[str, ...] = ALL_LAYERS) -> Networ
     for way, layer, runs in runs_by_way:
         key = street_key(way, layer)
         highway = way.tags["highway"]
+        bridge = _is_yes(way.tags.get("bridge")) or way.tags.get("man_made") == "pier"
         split = street_split if layer == STREET else other_split
         street = streets.get(key)
         if street is None:
@@ -160,6 +163,7 @@ def build_network(data: OsmData, layers: tuple[str, ...] = ALL_LAYERS) -> Networ
                             length_m=length,
                             highway=highway,
                             layer=layer,
+                            bridge=bridge,
                         )
                         edges.append(edge)
                         street.edge_ids.append(edge.id)
