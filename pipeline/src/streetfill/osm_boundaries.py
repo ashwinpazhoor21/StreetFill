@@ -50,6 +50,8 @@ def assemble_rings(lines: Sequence[Sequence[LatLon]]) -> list[tuple[LatLon, ...]
         ring = pending.pop(0)
         while ring[0] != ring[-1]:
             for i, line in enumerate(pending):
+                if line[0] == line[-1]:
+                    continue  # a closed way is a ring of its own
                 if line[0] == ring[-1]:
                     ring.extend(line[1:])
                 elif line[-1] == ring[-1]:
