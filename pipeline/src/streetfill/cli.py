@@ -274,6 +274,8 @@ def apply_city_config(args: argparse.Namespace) -> None:
                 value = str((path.parent / value).resolve())
             if key in ("bbox", "osm_json") and (args.bbox or args.osm_json):
                 continue  # the command line already chose the source
+            if key in ("osm_boundaries", "fetch_boundaries") and (args.osm_boundaries or args.fetch_boundaries):
+                continue  # likewise for the boundary source
             setattr(args, attr, value)
     for attr, default in BUILD_DEFAULTS.items():
         if getattr(args, attr, None) is None:
