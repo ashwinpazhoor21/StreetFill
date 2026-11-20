@@ -50,7 +50,7 @@ def test_tables_and_counts(pack, net):
 
 def test_meta(pack, net):
     meta = dict(pack.execute("SELECT key, value FROM meta"))
-    assert meta["schema_version"] == "6"
+    assert meta["schema_version"] == "7"
     assert meta["attribution"] == "© OpenStreetMap contributors"
     assert meta["edge_count"] == "13"
     assert float(meta["total_length_m"]) == pytest.approx(sum(e.length_m for e in net.edges), abs=0.01)

@@ -109,7 +109,7 @@ def test_pack_and_build_pack(tmp_path, capsys):
     flagged = con.execute("SELECT count(*) FROM edges WHERE scenery & 4").fetchone()[0]
     assert flagged > 0
     meta = dict(con.execute("SELECT key, value FROM meta"))
-    assert meta["schema_version"] == "6" and int(meta["scenery_edges"]) >= flagged
+    assert meta["schema_version"] == "7" and int(meta["scenery_edges"]) >= flagged
     assert con.execute("SELECT count(*) FROM highlights WHERE category = 'park'").fetchone()[0] == 1
 
 
