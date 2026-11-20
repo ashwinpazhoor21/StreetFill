@@ -52,12 +52,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     feat = bp.add_mutually_exclusive_group()
     feat.add_argument("--osm-features", metavar="PATH",
-                      help="saved Overpass JSON of highlight candidates (see feature-query)")
+                      help="saved Overpass JSON of highlight candidates and scenery (see feature-query)")
     feat.add_argument("--fetch-features", action="store_true", help="with --bbox: download highlight candidates too")
     bp.add_argument("--save-features", metavar="PATH", help="also save the downloaded feature JSON")
     bp.add_argument("--max-highlights", type=int, help="keep this many highlights, best first (default 2000)")
 
-    fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates")
+    fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates and scenery")
     fq.add_argument("--bbox", required=True, help="south,west,north,east")
 
     bq = sub.add_parser("boundary-query", help="print the Overpass query for city and neighborhood boundaries")
@@ -228,6 +228,10 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
             print(f"error: features: {exc}", file=sys.stderr)
             return 1 if args.fetch_features else 2
         highlights = extract(fdoc, city=city, limit=args.max_highlights)
+        from .scenery import add_scenery, scenery_features
+
+        polygons, coast = scenery_features(fdoc)
+        network = add_scenery(network, polygons, coast, [h.point for h in highlights])
     meta = write_pack(
         network,
         args.out,
@@ -262,6 +266,12 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
             by_cat[h.category] = by_cat.get(h.category, 0) + 1
         detail = ", ".join(f"{n} {c}" for c, n in sorted(by_cat.items())) or "none found"
         print(f"{len(highlights)} highlights ({detail}); photos not resolved yet, placeholders used")
+        from .scenery import NAMES
+
+        counts = ", ".join(
+            f"{sum(1 for e in network.edges if e.scenery & bit)} {name}" for bit, name in NAMES.items()
+        )
+        print(f"scenery flags: {meta['scenery_edges']} of {meta['edge_count']} edges ({counts})")
     if hoods:
         street_m = float(meta["street_length_m"])
         none = float(meta["unassigned_street_length_m"]) / street_m if street_m else 0.0

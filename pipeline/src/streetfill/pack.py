@@ -1,8 +1,8 @@
 """Write a street network to a SQLite street pack (product plan 5.3).
 
-Schema version 5 (version 1 had no ``layer`` columns, version 2 no
-neighborhoods, version 3 no elevation, version 4 no highlights; scenery flags
-arrive later in Phase 2):
+Schema version 6 (version 1 had no ``layer`` columns, version 2 no
+neighborhoods, version 3 no elevation, version 4 no highlights, version 5 no
+scenery flags):
 
 ``meta(key TEXT PRIMARY KEY, value TEXT)``
     ``schema_version``, ``pipeline_version``, ``built_at`` (UTC ISO 8601),
@@ -11,7 +11,8 @@ arrive later in Phase 2):
     ``street_count``, ``edge_count``, ``total_length_m``, ``street_length_m``,
     ``path_length_m``, ``neighborhood_count``, ``unassigned_street_length_m``.
     ``elevation_source``, ``elevation_spacing_m`` and ``elevation_edge_count``
-    (0 when the pack was built without an elevation model), ``highlight_count``
+    (0 when the pack was built without an elevation model), ``scenery_edges``
+    (edges with any scenery flag), ``highlight_count``
     and, with highlights, ``highlight_source``. When the pack is
     clipped to a city: ``city_id``, ``city_name``,
     ``city_source`` and ``city_rings``. With neighborhoods: ``neighborhood_source``.
@@ -26,7 +27,7 @@ arrive later in Phase 2):
 ``streets(id, key, name, highway, length_m)``
     One row per street. ``key`` is ``name:<normalized name>`` or ``way:<osm id>``.
 
-``edges(id, street_id, way_id, from_node, to_node, highway, length_m, geometry, layer, neighborhood_id, bridge, elevation, gain_m, loss_m)``
+``edges(id, street_id, way_id, from_node, to_node, highway, length_m, geometry, layer, neighborhood_id, bridge, elevation, gain_m, loss_m, scenery)``
     ``geometry`` is a BLOB of little-endian float64 ``(lat, lon)`` pairs, which
     keeps full precision and is trivial to read in Swift. ``neighborhood_id``
     is NULL for edges in no neighborhood. Negative node ids are boundary
@@ -35,7 +36,9 @@ arrive later in Phase 2):
     sampled evenly about ``elevation_spacing_m`` apart from ``from_node`` to
     ``to_node`` with both ends included (``streetfill.elevation``); ``gain_m``
     and ``loss_m`` are summed from it in that direction (swap them for the
-    other way). All three are NULL where the model has no data.
+    other way). All three are NULL where the model has no data. ``scenery`` is
+    bit flags: 1 water within 100 m, 2 beach within 150 m, 4 park within 50 m,
+    8 highlight within 75 m (``streetfill.scenery``).
 
 ``highlights(id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score, description, photo_url, photo_author, photo_licence)``
     Named places from OSM, best ``score`` first (``streetfill.highlights``).
@@ -70,7 +73,7 @@ if TYPE_CHECKING:
     from .boundaries import Area
     from .highlights import Highlight
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 GRID_CELL_M = 100.0
 ATTRIBUTION = "© OpenStreetMap contributors"
 
@@ -106,7 +109,8 @@ CREATE TABLE edges (
     bridge INTEGER NOT NULL DEFAULT 0,
     elevation BLOB,
     gain_m REAL,
-    loss_m REAL
+    loss_m REAL,
+    scenery INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX edges_street ON edges(street_id);
 CREATE INDEX edges_layer ON edges(layer);
@@ -267,6 +271,7 @@ def write_pack(
         "unassigned_street_length_m": f"{unassigned_m:.2f}",
         "elevation_edge_count": str(sum(1 for e in network.edges if e.elevation is not None)),
         "highlight_count": str(len(highlights)),
+        "scenery_edges": str(sum(1 for e in network.edges if e.scenery)),
     }
     if highlights:
         meta["highlight_source"] = highlight_source
@@ -305,7 +310,7 @@ def write_pack(
                 ((street_ids[s.key], s.key, s.name, s.highway, s.length_m, s.layer) for s in network.streets),
             )
             con.executemany(
-                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO edges VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     (
                         e.id,
@@ -320,6 +325,7 @@ def write_pack(
                         hood_ids.get(e.neighborhood) if e.neighborhood is not None else None,
                         int(e.bridge),
                         *_elevation_columns(e.elevation),
+                        e.scenery,
                     )
                     for e in network.edges
                 ),

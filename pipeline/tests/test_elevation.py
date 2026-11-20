@@ -132,7 +132,7 @@ def test_pack_stores_profiles_gain_and_loss(tmp_path, grid):
 
     pack = tmp_path / "p.sqlite"
     meta = write_pack(with_ele, pack, elevation_source="test grid")
-    assert meta["schema_version"] == "5" and meta["elevation_edge_count"] == str(covered)
+    assert meta["schema_version"] == "6" and meta["elevation_edge_count"] == str(covered)
     assert meta["elevation_source"] == "test grid" and meta["elevation_spacing_m"] == "30.0"
     con = sqlite3.connect(pack)
     by_id = {e.id: e for e in with_ele.edges}
