@@ -60,6 +60,23 @@ def build_boundary_query(bbox: BBox, timeout_s: int = 180) -> str:
     )
 
 
+def build_feature_query(bbox: BBox, timeout_s: int = 180) -> str:
+    """Overpass QL for named highlight candidates in ``bbox`` (plan 6.6), with full geometry."""
+    south, west, north, east = bbox
+    b = f"({south},{west},{north},{east})"
+    filters = [
+        '["natural"="beach"]',
+        '["leisure"="park"]',
+        '["tourism"~"^(attraction|viewpoint|artwork|museum)$"]',
+        '["man_made"~"^(lighthouse|pier|bridge)$"]',
+        '["amenity"="fountain"]',
+        '["historic"]',
+        '["bridge:name"]',
+    ]
+    parts = "".join(f"nwr{f}[\"name\"]{b};" if f != '["bridge:name"]' else f"way{f}{b};" for f in filters)
+    return f"[out:json][timeout:{timeout_s}];({parts});out geom;"
+
+
 def fetch(bbox: BBox, url: str = DEFAULT_URL, timeout_s: int = 180, query: str | None = None) -> dict[str, Any]:
     """Run the street query (or ``query``) and return the parsed Overpass JSON document."""
     body = urllib.parse.urlencode({"data": query or build_query(bbox, timeout_s)}).encode()

@@ -4,7 +4,7 @@ Each source a street pack is built from, with its licence and how to get it. Cla
 
 | Data | Source | Licence | Stored in the pack as |
 |---|---|---|---|
-| Streets, paths, bridges, boundaries, place points | OpenStreetMap via the Overpass API | ODbL 1.0; attribution "© OpenStreetMap contributors" | `meta.source`, `meta.attribution` |
+| Streets, paths, bridges, boundaries, place points, highlights | OpenStreetMap via the Overpass API | ODbL 1.0; attribution "© OpenStreetMap contributors" | `meta.source`, `meta.attribution` |
 | Neighborhoods (optional) | Official open data, for example a city's portal | Varies by city **[Unverified per city]**. Do not publish until it is checked; Chicago's community areas are not used yet. | `meta.neighborhood_source` |
 | Elevation, US | USGS 3D Elevation Program (3DEP), 1/3 arc-second DEM | Public domain **[Unverified]** | `meta.elevation_source` |
 | Elevation, elsewhere | Copernicus GLO-30 DEM | **[Unverified licence]**; not used yet | `meta.elevation_source` |

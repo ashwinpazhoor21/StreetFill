@@ -46,6 +46,10 @@ streetfill build-pack --city-config pipeline/cities/chicago.json --out pipeline/
 
 `--dem tile.asc [...]` adds an elevation profile to every edge (one sample about every 30 m, bridges interpolated, whole decimetres), plus gain and loss in each direction (schema v4). Tiles are ESRI ASCII grids in lon/lat. See [DATA_SOURCES.md](DATA_SOURCES.md) for preparing USGS 3DEP tiles, and for the licence of every data source.
 
+### Highlights
+
+`--osm-features features.json` (saved from `streetfill feature-query --bbox ...`) or `--fetch-features` with `--bbox` adds a `highlights` table (schema v5). It holds named beaches, parks of 1 ha or more, attractions, viewpoints, artwork, museums, lighthouses, bridges, piers, fountains and historic places inside the city. Each is reduced to a point with a placeholder category (beach, park, landmark, water, historic), a route-matching radius (150 m for beaches and parks, 60 m otherwise) and a score; the best 2,000 are kept (`--max-highlights`). Photos are not resolved yet, so the app shows the category placeholder.
+
 The public Overpass server can be slow or rate-limited. If a download fails, retry later, pass another server with `--overpass-url`, or export the area as Overpass JSON yourself and use `--osm-json`.
 
 ## Gate 1: measure matching accuracy

@@ -1,8 +1,8 @@
 """Write a street network to a SQLite street pack (product plan 5.3).
 
-Schema version 4 (version 1 had no ``layer`` columns, version 2 no
-neighborhoods, version 3 no elevation; scenery and highlights arrive later in
-Phase 2):
+Schema version 5 (version 1 had no ``layer`` columns, version 2 no
+neighborhoods, version 3 no elevation, version 4 no highlights; scenery flags
+arrive later in Phase 2):
 
 ``meta(key TEXT PRIMARY KEY, value TEXT)``
     ``schema_version``, ``pipeline_version``, ``built_at`` (UTC ISO 8601),
@@ -11,7 +11,8 @@ Phase 2):
     ``street_count``, ``edge_count``, ``total_length_m``, ``street_length_m``,
     ``path_length_m``, ``neighborhood_count``, ``unassigned_street_length_m``.
     ``elevation_source``, ``elevation_spacing_m`` and ``elevation_edge_count``
-    (0 when the pack was built without an elevation model). When the pack is
+    (0 when the pack was built without an elevation model), ``highlight_count``
+    and, with highlights, ``highlight_source``. When the pack is
     clipped to a city: ``city_id``, ``city_name``,
     ``city_source`` and ``city_rings``. With neighborhoods: ``neighborhood_source``.
 
@@ -35,6 +36,13 @@ Phase 2):
     ``to_node`` with both ends included (``streetfill.elevation``); ``gain_m``
     and ``loss_m`` are summed from it in that direction (swap them for the
     other way). All three are NULL where the model has no data.
+
+``highlights(id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score, description, photo_url, photo_author, photo_licence)``
+    Named places from OSM, best ``score`` first (``streetfill.highlights``).
+    ``category`` is one of beach, park, landmark, water, historic and picks the
+    placeholder illustration. A highlight belongs to a route that passes within
+    ``radius_m``. The description and photo columns are NULL until photos are
+    resolved; a photo is never shown without its author and licence.
 
 ``grid(cell_x, cell_y, edge_id)``
     Spatial index. Cells are ``grid_cell_m`` squares in the local projection
@@ -60,8 +68,9 @@ from .network import Network
 
 if TYPE_CHECKING:
     from .boundaries import Area
+    from .highlights import Highlight
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 GRID_CELL_M = 100.0
 ATTRIBUTION = "© OpenStreetMap contributors"
 
@@ -102,6 +111,23 @@ CREATE TABLE edges (
 CREATE INDEX edges_street ON edges(street_id);
 CREATE INDEX edges_layer ON edges(layer);
 CREATE INDEX edges_neighborhood ON edges(neighborhood_id);
+CREATE TABLE highlights (
+    id INTEGER PRIMARY KEY,
+    osm_id TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    radius_m REAL NOT NULL,
+    size_m2 REAL NOT NULL,
+    wikidata TEXT,
+    score REAL NOT NULL,
+    description TEXT,
+    photo_url TEXT,
+    photo_author TEXT,
+    photo_licence TEXT,
+    CHECK (photo_url IS NULL OR (photo_author IS NOT NULL AND photo_licence IS NOT NULL))
+);
 CREATE TABLE grid (
     cell_x INTEGER NOT NULL,
     cell_y INTEGER NOT NULL,
@@ -187,6 +213,8 @@ def write_pack(
     neighborhood_source: str = "",
     elevation_source: str = "",
     elevation_spacing_m: float | None = None,
+    highlights: Sequence[Highlight] = (),
+    highlight_source: str = "",
 ) -> dict[str, str]:
     """Write ``network`` to a new SQLite file at ``out`` and return its meta.
 
@@ -238,7 +266,10 @@ def write_pack(
         "neighborhood_count": str(len(neighborhoods)),
         "unassigned_street_length_m": f"{unassigned_m:.2f}",
         "elevation_edge_count": str(sum(1 for e in network.edges if e.elevation is not None)),
+        "highlight_count": str(len(highlights)),
     }
+    if highlights:
+        meta["highlight_source"] = highlight_source
     if meta["elevation_edge_count"] != "0":
         from .elevation import SPACING_M
 
@@ -259,6 +290,14 @@ def write_pack(
                 (
                     (i, a.id, a.name, hood_len[(a.id, "street")], hood_len[(a.id, "path")], rings_json(a.rings))
                     for a, i in ((a, hood_ids[a.id]) for a in neighborhoods)
+                ),
+            )
+            con.executemany(
+                "INSERT INTO highlights (id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    (i, h.osm_id, h.name, h.category, h.point[0], h.point[1], h.radius_m, h.size_m2, h.wikidata, h.score)
+                    for i, h in enumerate(highlights, start=1)
                 ),
             )
             con.executemany(
