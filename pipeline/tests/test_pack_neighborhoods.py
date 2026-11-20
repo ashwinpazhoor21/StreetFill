@@ -35,7 +35,7 @@ def rows(pack, sql):
 def test_pack_stores_neighborhoods_and_their_lengths(split, tmp_path):
     pack = tmp_path / "p.sqlite"
     meta = write_pack(split, pack, city=CITY, city_source="test", neighborhoods=HOODS, neighborhood_source="test")
-    assert meta["schema_version"] == "4" and meta["neighborhood_count"] == "2"
+    assert meta["schema_version"] == "5" and meta["neighborhood_count"] == "2"
     assert (meta["city_id"], meta["city_name"]) == ("17", "17".title())
 
     lengths = area_lengths(split)

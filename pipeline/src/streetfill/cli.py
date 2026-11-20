@@ -50,6 +50,16 @@ def build_parser() -> argparse.ArgumentParser:
     bp.add_argument("--dem-source", help="elevation data source, for attribution "
                                          "(default: USGS 3DEP 1/3 arc-second DEM)")
 
+    feat = bp.add_mutually_exclusive_group()
+    feat.add_argument("--osm-features", metavar="PATH",
+                      help="saved Overpass JSON of highlight candidates (see feature-query)")
+    feat.add_argument("--fetch-features", action="store_true", help="with --bbox: download highlight candidates too")
+    bp.add_argument("--save-features", metavar="PATH", help="also save the downloaded feature JSON")
+    bp.add_argument("--max-highlights", type=int, help="keep this many highlights, best first (default 2000)")
+
+    fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates")
+    fq.add_argument("--bbox", required=True, help="south,west,north,east")
+
     bq = sub.add_parser("boundary-query", help="print the Overpass query for city and neighborhood boundaries")
     bq.add_argument("--bbox", required=True, help="south,west,north,east")
 
@@ -208,6 +218,16 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         elevation_note = f"elevation for {covered} of {len(network.edges)} edges"
         if covered < len(network.edges):
             elevation_note += " (the rest are outside the elevation tiles)"
+    highlights = []
+    if args.osm_features or args.fetch_features:
+        from .highlights import extract
+
+        try:
+            fdoc = _feature_doc(args, bbox)
+        except (OSError, ValueError) as exc:
+            print(f"error: features: {exc}", file=sys.stderr)
+            return 1 if args.fetch_features else 2
+        highlights = extract(fdoc, city=city, limit=args.max_highlights)
     meta = write_pack(
         network,
         args.out,
@@ -218,6 +238,8 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         neighborhoods=hoods,
         neighborhood_source=hood_source,
         elevation_source=args.dem_source,
+        highlights=highlights,
+        highlight_source="OpenStreetMap",
     )
     elapsed = time.perf_counter() - start
     layers = {}
@@ -234,6 +256,12 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         print(f"clipped to {city.name}")
     if elevation_note:
         print(elevation_note)
+    if args.osm_features or args.fetch_features:
+        by_cat: dict[str, int] = {}
+        for h in highlights:
+            by_cat[h.category] = by_cat.get(h.category, 0) + 1
+        detail = ", ".join(f"{n} {c}" for c, n in sorted(by_cat.items())) or "none found"
+        print(f"{len(highlights)} highlights ({detail}); photos not resolved yet, placeholders used")
     if hoods:
         street_m = float(meta["street_length_m"])
         none = float(meta["unassigned_street_length_m"]) / street_m if street_m else 0.0
@@ -259,8 +287,11 @@ CITY_CONFIG_KEYS = {
     "approximate_regions": "approximate_regions",
     "dem": "dem",
     "dem_source": "dem_source",
+    "osm_features": "osm_features",
+    "fetch_features": "fetch_features",
+    "max_highlights": "max_highlights",
 }
-PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries", "dem"}
+PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries", "dem", "osm_features"}
 BUILD_DEFAULTS = {
     "admin_level": "8",
     "neighborhood_id_property": "id",
@@ -269,6 +300,7 @@ BUILD_DEFAULTS = {
     "neighborhood_source": "",
     "approximate_regions": True,
     "dem_source": "USGS 3DEP 1/3 arc-second DEM",
+    "max_highlights": 2000,
 }
 
 
@@ -303,6 +335,8 @@ def apply_city_config(args: argparse.Namespace) -> None:
                 continue  # the command line already chose the source
             if key in ("osm_boundaries", "fetch_boundaries") and (args.osm_boundaries or args.fetch_boundaries):
                 continue  # likewise for the boundary source
+            if key in ("osm_features", "fetch_features") and (args.osm_features or args.fetch_features):
+                continue  # and for highlight features
             setattr(args, attr, value)
     for attr, default in BUILD_DEFAULTS.items():
         if getattr(args, attr, None) is None:
@@ -380,6 +414,34 @@ def _osm_boundaries(args, doc, data, bbox, city, hoods, city_source, hood_source
     return city, hoods, city_source, hood_source
 
 
+def _feature_doc(args: argparse.Namespace, bbox):
+    from . import overpass
+
+    if args.osm_features:
+        with open(args.osm_features, encoding="utf-8") as fh:
+            return json.load(fh)
+    if bbox is None:
+        raise ValueError("--fetch-features needs --bbox")
+    url = args.overpass_url or overpass.DEFAULT_URL
+    doc = overpass.fetch(bbox, url=url, query=overpass.build_feature_query(bbox))
+    if args.save_features:
+        with open(args.save_features, "w", encoding="utf-8") as fh:
+            json.dump(doc, fh)
+    return doc
+
+
+def cmd_feature_query(args: argparse.Namespace) -> int:
+    from . import overpass
+
+    try:
+        bbox = overpass.parse_bbox(args.bbox)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(overpass.build_feature_query(bbox))
+    return 0
+
+
 def cmd_boundary_query(args: argparse.Namespace) -> int:
     from . import overpass
 
@@ -416,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
         "report": cmd_report,
         "build-pack": cmd_build_pack,
         "boundary-query": cmd_boundary_query,
+        "feature-query": cmd_feature_query,
         "match": cmd_match,
         "label-sheet": cmd_label_sheet,
         "evaluate": cmd_evaluate,
