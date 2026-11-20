@@ -1,8 +1,8 @@
 """Write a street network to a SQLite street pack (product plan 5.3).
 
-Schema version 6 (version 1 had no ``layer`` columns, version 2 no
+Schema version 7 (version 1 had no ``layer`` columns, version 2 no
 neighborhoods, version 3 no elevation, version 4 no highlights, version 5 no
-scenery flags):
+scenery flags, version 6 no photo sources):
 
 ``meta(key TEXT PRIMARY KEY, value TEXT)``
     ``schema_version``, ``pipeline_version``, ``built_at`` (UTC ISO 8601),
@@ -12,7 +12,7 @@ scenery flags):
     ``path_length_m``, ``neighborhood_count``, ``unassigned_street_length_m``.
     ``elevation_source``, ``elevation_spacing_m`` and ``elevation_edge_count``
     (0 when the pack was built without an elevation model), ``scenery_edges``
-    (edges with any scenery flag), ``highlight_count``
+    (edges with any scenery flag), ``highlight_count``, ``highlight_photo_count``
     and, with highlights, ``highlight_source``. When the pack is
     clipped to a city: ``city_id``, ``city_name``,
     ``city_source`` and ``city_rings``. With neighborhoods: ``neighborhood_source``.
@@ -40,12 +40,17 @@ scenery flags):
     bit flags: 1 water within 100 m, 2 beach within 150 m, 4 park within 50 m,
     8 highlight within 75 m (``streetfill.scenery``).
 
-``highlights(id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score, description, photo_url, photo_author, photo_licence)``
+``highlights(id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score, description, photo_url, photo_author, photo_licence, photo_file, photo_page_url, photo_source_url, photo_licence_url)``
     Named places from OSM, best ``score`` first (``streetfill.highlights``).
     ``category`` is one of beach, park, landmark, water, historic and picks the
     placeholder illustration. A highlight belongs to a route that passes within
-    ``radius_m``. The description and photo columns are NULL until photos are
-    resolved; a photo is never shown without its author and licence.
+    ``radius_m``. ``description`` comes from Wikidata. ``photo_file`` (Commons
+    title), ``photo_page_url``, ``photo_source_url`` (a 480 px thumbnail on
+    Wikimedia), ``photo_author``, ``photo_licence`` and ``photo_licence_url``
+    describe a freely licensed photo (``streetfill.photos``). ``photo_url`` is
+    the mirrored copy on StreetFill's CDN, the only URL the app loads, and stays
+    NULL until mirroring runs. No photo column is ever set without an author
+    and a licence.
 
 ``grid(cell_x, cell_y, edge_id)``
     Spatial index. Cells are ``grid_cell_m`` squares in the local projection
@@ -73,7 +78,7 @@ if TYPE_CHECKING:
     from .boundaries import Area
     from .highlights import Highlight
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 GRID_CELL_M = 100.0
 ATTRIBUTION = "© OpenStreetMap contributors"
 
@@ -130,7 +135,11 @@ CREATE TABLE highlights (
     photo_url TEXT,
     photo_author TEXT,
     photo_licence TEXT,
-    CHECK (photo_url IS NULL OR (photo_author IS NOT NULL AND photo_licence IS NOT NULL))
+    photo_file TEXT,
+    photo_page_url TEXT,
+    photo_source_url TEXT,
+    photo_licence_url TEXT,
+    CHECK ((photo_url IS NULL AND photo_file IS NULL) OR (photo_author IS NOT NULL AND photo_licence IS NOT NULL))
 );
 CREATE TABLE grid (
     cell_x INTEGER NOT NULL,
@@ -271,6 +280,7 @@ def write_pack(
         "unassigned_street_length_m": f"{unassigned_m:.2f}",
         "elevation_edge_count": str(sum(1 for e in network.edges if e.elevation is not None)),
         "highlight_count": str(len(highlights)),
+        "highlight_photo_count": str(sum(1 for h in highlights if getattr(h, "photo", None))),
         "scenery_edges": str(sum(1 for e in network.edges if e.scenery)),
     }
     if highlights:
@@ -298,10 +308,16 @@ def write_pack(
                 ),
             )
             con.executemany(
-                "INSERT INTO highlights (id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO highlights (id, osm_id, name, category, lat, lon, radius_m, size_m2, wikidata, score, "
+                "description, photo_author, photo_licence, photo_file, photo_page_url, photo_source_url, "
+                "photo_licence_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    (i, h.osm_id, h.name, h.category, h.point[0], h.point[1], h.radius_m, h.size_m2, h.wikidata, h.score)
+                    (
+                        i, h.osm_id, h.name, h.category, h.point[0], h.point[1], h.radius_m, h.size_m2, h.wikidata,
+                        h.score, h.description,
+                        *((h.photo.author, h.photo.licence, h.photo.file, h.photo.page_url, h.photo.thumb_url,
+                           h.photo.licence_url) if h.photo else (None,) * 6),
+                    )
                     for i, h in enumerate(highlights, start=1)
                 ),
             )

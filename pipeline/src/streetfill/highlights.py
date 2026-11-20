@@ -20,19 +20,23 @@ Score [Tune] = 2 for a Wikidata id + 1 for a photo hint (``image`` or
 The top ``limit`` (2,000) are kept. The same name and category within 200 m is
 one highlight (for example a museum mapped as both a node and a building).
 
-Photos, descriptions and their licences come later (#11 part 3). Until then
-every highlight uses its category placeholder.
+Photos, descriptions and their licences are added by :mod:`streetfill.photos`;
+a highlight without a photo uses its category placeholder.
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, Sequence
+from urllib.parse import unquote
 
 from .boundaries import Area
 from .geo import LatLon, LocalProjection, haversine_m
 from .osm_boundaries import _Container, _inside_point, assemble_rings
+
+if TYPE_CHECKING:
+    from .photos import Photo
 
 CATEGORIES = ("beach", "park", "landmark", "water", "historic")
 LARGE = {"beach", "park"}
@@ -52,6 +56,9 @@ class Highlight:
     radius_m: float
     wikidata: str | None
     score: float
+    commons: str | None = None  # "File:..." from the wikimedia_commons or image tag
+    description: str | None = None  # set by photos.resolve_photos (Wikidata)
+    photo: "Photo | None" = None  # set by photos.resolve_photos
 
 
 def category(tags: Mapping[str, str]) -> str | None:
@@ -69,6 +76,24 @@ def category(tags: Mapping[str, str]) -> str | None:
     if tags.get("man_made") in ("lighthouse", "bridge") or "bridge:name" in tags:
         return "landmark"
     return None
+
+
+def commons_file(tags: Mapping[str, str]) -> str | None:
+    """A Commons file title from ``wikimedia_commons`` or ``image`` tags, if they name one."""
+    for value in (tags.get("wikimedia_commons"), tags.get("image")):
+        if not value:
+            continue
+        value = value.strip()
+        if value.startswith("File:"):
+            return value
+        if "commons.wikimedia.org/wiki/File:" in value:
+            return "File:" + unquote(value.split("/wiki/File:", 1)[1]).replace("_", " ")
+        if "upload.wikimedia.org/wikipedia/commons/" in value:
+            name = value.rstrip("/").rsplit("/", 1)[-1]
+            if "/thumb/" in value:  # .../thumb/a/ab/Name.jpg/480px-Name.jpg
+                name = value.split("/thumb/", 1)[1].split("/")[2]
+            return "File:" + unquote(name).replace("_", " ")
+    return None  # other image URLs have no known licence
 
 
 def _name(tags: Mapping[str, str]) -> str | None:
@@ -171,6 +196,7 @@ def extract(doc: Mapping[str, Any], *, city: Area | None = None, limit: int = MA
                 radius_m=RADIUS_M["large" if cat in LARGE else "small"],
                 wikidata=tags.get("wikidata"),
                 score=score(size, tags),
+                commons=commons_file(tags),
             )
         )
 

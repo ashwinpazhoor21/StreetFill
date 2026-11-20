@@ -6,6 +6,8 @@ Each source a street pack is built from, with its licence and how to get it. Cla
 |---|---|---|---|
 | Streets, paths, bridges, boundaries, place points, highlights | OpenStreetMap via the Overpass API | ODbL 1.0; attribution "© OpenStreetMap contributors" | `meta.source`, `meta.attribution` |
 | Neighborhoods (optional) | Official open data, for example a city's portal | Varies by city **[Unverified per city]**. Do not publish until it is checked; Chicago's community areas are not used yet. | `meta.neighborhood_source` |
+| Highlight photos (optional, `--resolve-photos`) | Wikimedia Commons, via a highlight's `wikimedia_commons` or `image` tag or its Wikidata image | Per file. Only public domain, CC0, CC BY and CC BY-SA files are kept, always with author and licence. Whether resizing and mirroring CC BY-SA images to a CDN meets their terms, and Wikimedia's bulk-reuse policy, is **[Unverified]** (#13). | `highlights.photo_*` |
+| Highlight descriptions | Wikidata English descriptions | CC0 **[Unverified]** | `highlights.description` |
 | Elevation, US | USGS 3D Elevation Program (3DEP), 1/3 arc-second DEM | Public domain **[Unverified]** | `meta.elevation_source` |
 | Elevation, elsewhere | Copernicus GLO-30 DEM | **[Unverified licence]**; not used yet | `meta.elevation_source` |
 
