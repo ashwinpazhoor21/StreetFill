@@ -52,6 +52,7 @@ class Edge:
     neighborhood: str | None = None  # set by boundaries.assign_areas
     bridge: bool = False  # bridge or pier: elevation is interpolated, not sampled
     elevation: list[float] | None = None  # set by elevation.add_elevation; metres, whole decimetres
+    scenery: int = 0  # bit flags set by scenery.add_scenery
 
 
 @dataclass
