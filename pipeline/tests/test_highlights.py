@@ -115,7 +115,7 @@ def test_pack_stores_highlights(tmp_path):
                      node(2, 50, 50, tourism="artwork", name="Cloud")))
     pack = tmp_path / "p.sqlite"
     meta = write_pack(GRID, pack, highlights=hs, highlight_source="OpenStreetMap")
-    assert meta["schema_version"] == "6" and meta["highlight_count"] == "2"
+    assert meta["schema_version"] == "7" and meta["highlight_count"] == "2"
     con = sqlite3.connect(pack)
     rows = con.execute("SELECT id, osm_id, name, category, radius_m, wikidata, photo_url FROM highlights ORDER BY id").fetchall()
     assert rows == [(1, "way/1", "Oak Beach", "beach", 150.0, "Q7", None), (2, "node/2", "Cloud", "landmark", 60.0, None, None)]

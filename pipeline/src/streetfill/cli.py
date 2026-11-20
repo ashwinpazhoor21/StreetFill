@@ -56,6 +56,9 @@ def build_parser() -> argparse.ArgumentParser:
     feat.add_argument("--fetch-features", action="store_true", help="with --bbox: download highlight candidates too")
     bp.add_argument("--save-features", metavar="PATH", help="also save the downloaded feature JSON")
     bp.add_argument("--max-highlights", type=int, help="keep this many highlights, best first (default 2000)")
+    bp.add_argument("--resolve-photos", action="store_true",
+                    help="look up freely licensed photos and descriptions on Wikidata and Wikimedia Commons")
+    bp.add_argument("--photo-cache", metavar="PATH", help="JSON cache for those lookups, reused on rebuilds")
 
     fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates and scenery")
     fq.add_argument("--bbox", required=True, help="south,west,north,east")
@@ -228,6 +231,17 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
             print(f"error: features: {exc}", file=sys.stderr)
             return 1 if args.fetch_features else 2
         highlights = extract(fdoc, city=city, limit=args.max_highlights)
+        if args.resolve_photos and highlights:
+            from .photos import CachedFetch, http_fetch_json, resolve_photos
+
+            fetch = CachedFetch(http_fetch_json, args.photo_cache, pause_s=1.0)
+            try:
+                highlights = resolve_photos(highlights, fetch)
+            except (OSError, ValueError) as exc:
+                print(f"error: photo lookup failed: {exc}", file=sys.stderr)
+                return 1
+            finally:
+                fetch.save()
         from .scenery import add_scenery, scenery_features
 
         polygons, coast = scenery_features(fdoc)
@@ -265,7 +279,12 @@ def cmd_build_pack(args: argparse.Namespace) -> int:
         for h in highlights:
             by_cat[h.category] = by_cat.get(h.category, 0) + 1
         detail = ", ".join(f"{n} {c}" for c, n in sorted(by_cat.items())) or "none found"
-        print(f"{len(highlights)} highlights ({detail}); photos not resolved yet, placeholders used")
+        if args.resolve_photos:
+            photos = sum(1 for h in highlights if h.photo)
+            print(f"{len(highlights)} highlights ({detail}); {photos} with a freely licensed photo "
+                  "(not mirrored to a CDN yet, so the app still shows placeholders)")
+        else:
+            print(f"{len(highlights)} highlights ({detail}); photos not resolved yet, placeholders used")
         from .scenery import NAMES
 
         counts = ", ".join(
@@ -300,8 +319,10 @@ CITY_CONFIG_KEYS = {
     "osm_features": "osm_features",
     "fetch_features": "fetch_features",
     "max_highlights": "max_highlights",
+    "resolve_photos": "resolve_photos",
+    "photo_cache": "photo_cache",
 }
-PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries", "dem", "osm_features"}
+PATH_KEYS = {"osm_json", "city", "neighborhoods", "osm_boundaries", "dem", "osm_features", "photo_cache"}
 BUILD_DEFAULTS = {
     "admin_level": "8",
     "neighborhood_id_property": "id",
