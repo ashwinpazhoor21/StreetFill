@@ -61,7 +61,10 @@ def build_boundary_query(bbox: BBox, timeout_s: int = 180) -> str:
 
 
 def build_feature_query(bbox: BBox, timeout_s: int = 180) -> str:
-    """Overpass QL for named highlight candidates in ``bbox`` (plan 6.6), with full geometry."""
+    """Overpass QL for highlight candidates and scenery features in ``bbox`` (plan 6.6), with full geometry.
+
+    Highlights need a name; scenery (water, coastline, beaches, parks) does not.
+    """
     south, west, north, east = bbox
     b = f"({south},{west},{north},{east})"
     filters = [
@@ -74,7 +77,11 @@ def build_feature_query(bbox: BBox, timeout_s: int = 180) -> str:
         '["bridge:name"]',
     ]
     parts = "".join(f"nwr{f}[\"name\"]{b};" if f != '["bridge:name"]' else f"way{f}{b};" for f in filters)
-    return f"[out:json][timeout:{timeout_s}];({parts});out geom;"
+    scenery = (
+        f'wr["natural"="water"]{b};wr["waterway"="riverbank"]{b};way["natural"="coastline"]{b};'
+        f'wr["natural"="beach"]{b};wr["leisure"="park"]{b};'
+    )
+    return f"[out:json][timeout:{timeout_s}];({parts}{scenery});out geom;"
 
 
 def fetch(bbox: BBox, url: str = DEFAULT_URL, timeout_s: int = 180, query: str | None = None) -> dict[str, Any]:
