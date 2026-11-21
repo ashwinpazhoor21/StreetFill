@@ -60,6 +60,20 @@ def build_parser() -> argparse.ArgumentParser:
                     help="look up freely licensed photos and descriptions on Wikidata and Wikimedia Commons")
     bp.add_argument("--photo-cache", metavar="PATH", help="JSON cache for those lookups, reused on rebuilds")
 
+    vp = sub.add_parser("validate", help="check a pack before publishing (plan 5.7)")
+    vp.add_argument("--pack", required=True)
+    vp.add_argument("--manifest", help="compare with this city's last published version in a manifest.json")
+    vp.add_argument("--city-id", help="the city's id in the manifest")
+    vp.add_argument("--allow-change", action="store_true", help="report changes over 3%% as warnings, not errors")
+
+    sp = sub.add_parser("stage", help="validate, gzip and add a pack to a publish folder's manifest.json")
+    sp.add_argument("--pack", required=True)
+    sp.add_argument("--city-id", required=True, help="lowercase id, for example chicago")
+    sp.add_argument("--out-dir", required=True, help="publish folder (for example pipeline/publish)")
+    sp.add_argument("--name", help="display name (default: the pack's city name)")
+    sp.add_argument("--allow-change", action="store_true", help="publish even if a statistic changed by more than 3%%")
+    sp.add_argument("--max-mb", type=float, default=10.0, help="compressed size limit in MB (default 10)")
+
     fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates and scenery")
     fq.add_argument("--bbox", required=True, help="south,west,north,east")
 
@@ -461,6 +475,48 @@ def _feature_doc(args: argparse.Namespace, bbox):
     return doc
 
 
+def cmd_validate(args: argparse.Namespace) -> int:
+    from .publish import load_manifest
+    from .validate import STATS, validate_pack
+
+    previous = None
+    if args.manifest:
+        if not args.city_id:
+            print("error: --manifest needs --city-id", file=sys.stderr)
+            return 2
+        try:
+            entry = next((c for c in load_manifest(args.manifest)["cities"] if c["id"] == args.city_id), None)
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        previous = {k: entry[k] for k in STATS if k in entry} if entry else None
+    report = validate_pack(args.pack, previous=previous, allow_change=args.allow_change)
+    print(report.text())
+    return 0 if report.ok else 1
+
+
+def cmd_stage(args: argparse.Namespace) -> int:
+    from .publish import PublishError, stage_pack
+
+    try:
+        entry, report = stage_pack(
+            args.pack, args.city_id, args.out_dir, name=args.name, allow_change=args.allow_change,
+            max_compressed_bytes=int(args.max_mb * 1024 * 1024),
+        )
+    except PublishError as exc:
+        print(exc.report.text(), file=sys.stderr)
+        print("nothing was staged", file=sys.stderr)
+        return 1
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    for w in report.warnings:
+        print(f"warning: {w}")
+    print(f"staged {entry['name']} v{entry['version']}: {entry['path']} ({entry['bytes'] / 1e6:.2f} MB, "
+          f"sha256 {entry['sha256'][:12]}...); preview: {entry['preview']}")
+    return 0
+
+
 def cmd_feature_query(args: argparse.Namespace) -> int:
     from . import overpass
 
@@ -510,6 +566,8 @@ def main(argv: list[str] | None = None) -> int:
         "build-pack": cmd_build_pack,
         "boundary-query": cmd_boundary_query,
         "feature-query": cmd_feature_query,
+        "validate": cmd_validate,
+        "stage": cmd_stage,
         "match": cmd_match,
         "label-sheet": cmd_label_sheet,
         "evaluate": cmd_evaluate,
