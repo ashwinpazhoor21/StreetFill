@@ -61,6 +61,14 @@ streetfill stage    --pack pipeline/out/chicago.sqlite --city-id chicago --out-d
 
 `validate` checks integrity, foreign keys, meta counts and lengths, grid coverage, and that neighborhoods sum to the city. Against the last published version, any change above 3% in street length, street count or edge count blocks publishing unless you pass `--allow-change`. `stage` runs the same checks plus the 10 MB compressed target (`--max-mb`). It then writes `packs/<city>-v<n>.sqlite.gz` (a deterministic gzip), its sha256, an entry in `manifest.json` and `preview/<city>-v<n>.html` for the visual check on a city's first publish (product plan 5.7). If validation fails, nothing is written. `pipeline/publish/` is git-ignored.
 
+```bash
+streetfill upload --dir pipeline/publish --dry-run   # check every hash and show the plan
+STREETFILL_S3_ENDPOINT=https://... STREETFILL_S3_BUCKET=... AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \
+  streetfill upload --dir pipeline/publish
+```
+
+`upload` sends the folder to any S3-compatible store (AWS S3, Cloudflare R2 and others; set `STREETFILL_S3_REGION` if needed). It signs requests with AWS Signature V4 and uses only the standard library. It checks every pack against its sha256 first, then uploads the packs (immutable, cached for a year, skipped if already there) and `manifest.json` last (cached for 5 minutes), so the app never sees a manifest that points at a missing pack. Settings come only from the environment, never from arguments or files in the repository.
+
 ## Gate 1: measure matching accuracy
 
 Everything here reads your Health export, so write outputs under `data/` (git-ignored).
