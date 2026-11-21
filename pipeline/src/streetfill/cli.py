@@ -74,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--allow-change", action="store_true", help="publish even if a statistic changed by more than 3%%")
     sp.add_argument("--max-mb", type=float, default=10.0, help="compressed size limit in MB (default 10)")
 
+    up = sub.add_parser("upload", help="upload a staged publish folder to S3-compatible storage (packs, then manifest)")
+    up.add_argument("--dir", required=True, help="the publish folder written by stage")
+    up.add_argument("--prefix", default="", help="key prefix in the bucket, for example v1")
+    up.add_argument("--dry-run", action="store_true", help="check hashes and print the plan without uploading")
+
     fq = sub.add_parser("feature-query", help="print the Overpass query for highlight candidates and scenery")
     fq.add_argument("--bbox", required=True, help="south,west,north,east")
 
@@ -517,6 +522,22 @@ def cmd_stage(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_upload(args: argparse.Namespace) -> int:
+    from . import upload as up
+
+    try:
+        if args.dry_run:
+            steps = up.plan(args.dir)
+        else:
+            steps = up.upload(args.dir, up.Target.from_env(prefix=args.prefix), send=up.http_send)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    for step in steps:
+        print(f"{'would upload' if args.dry_run else step.action}: {step.key}")
+    return 0
+
+
 def cmd_feature_query(args: argparse.Namespace) -> int:
     from . import overpass
 
@@ -568,6 +589,7 @@ def main(argv: list[str] | None = None) -> int:
         "feature-query": cmd_feature_query,
         "validate": cmd_validate,
         "stage": cmd_stage,
+        "upload": cmd_upload,
         "match": cmd_match,
         "label-sheet": cmd_label_sheet,
         "evaluate": cmd_evaluate,
