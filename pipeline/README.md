@@ -52,6 +52,15 @@ streetfill build-pack --city-config pipeline/cities/chicago.json --out pipeline/
 
 The public Overpass server can be slow or rate-limited. If a download fails, retry later, pass another server with `--overpass-url`, or export the area as Overpass JSON yourself and use `--osm-json`.
 
+## Validate and stage a pack for publishing
+
+```bash
+streetfill validate --pack pipeline/out/chicago.sqlite
+streetfill stage    --pack pipeline/out/chicago.sqlite --city-id chicago --out-dir pipeline/publish
+```
+
+`validate` checks integrity, foreign keys, meta counts and lengths, grid coverage, and that neighborhoods sum to the city. Against the last published version, any change above 3% in street length, street count or edge count blocks publishing unless you pass `--allow-change`. `stage` runs the same checks plus the 10 MB compressed target (`--max-mb`). It then writes `packs/<city>-v<n>.sqlite.gz` (a deterministic gzip), its sha256, an entry in `manifest.json` and `preview/<city>-v<n>.html` for the visual check on a city's first publish (product plan 5.7). If validation fails, nothing is written. `pipeline/publish/` is git-ignored.
+
 ## Gate 1: measure matching accuracy
 
 Everything here reads your Health export, so write outputs under `data/` (git-ignored).
