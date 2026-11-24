@@ -25,6 +25,7 @@ For each candidate (lower is better)::
   edges. Going straight back along the same edge is a spur, not a turn.
 * **deadEndSpurs**: places where the route turns straight back along the edge
   it arrived on, which is how a route goes in and out of a dead end.
+  An out-and-back's turnaround is expected, so one is not counted.
 
 **Choosing three.** The best-scoring candidate first, then the next best whose
 overlap with every route already chosen is under 40%, until there are three.
@@ -133,8 +134,14 @@ def score_route(
     prefs: Preferences = Preferences(),
     coverage: Mapping[int, float] = {},
     highlights: Sequence[HighlightPoint] | HighlightGrid = (),
+    *,
+    turnarounds: int = 0,
 ) -> Score:
-    """Score one route, given as (edge id, forward) arcs in order."""
+    """Score one route, given as (edge id, forward) arcs in order.
+
+    ``turnarounds`` U-turns are expected and not counted as dead-end spurs
+    (1 for an out-and-back, whose return may start back along the same edge).
+    """
     if distance_m <= 0:
         raise ValueError("distance must be positive")
     grid = highlights if isinstance(highlights, HighlightGrid) else HighlightGrid(highlights)
@@ -191,7 +198,7 @@ def score_route(
         "highlights": -W_HIGHLIGHT * min(len(passed), MAX_HIGHLIGHTS),
         "repeated": W_REPEAT * repeated_share,
         "turns": W_TURNS * max(0.0, turns_per_mile - FREE_TURNS_PER_MILE),
-        "spurs": W_SPUR * spurs,
+        "spurs": W_SPUR * max(0, spurs - turnarounds),
     }
     return Score(sum(terms.values()), terms, length, new_share, gain_m, gain_rate, scenery_share,
                  list(passed), repeated_share, turns, turns_per_mile, spurs)
@@ -227,11 +234,14 @@ def best_routes(
     *,
     seed: int = 0,
     n: int = 3,
+    shape: str = "loop",
 ) -> list[Choice]:
     """Generate the 6.3 candidates, score them (6.4) and choose up to ``n`` different ones."""
     grid = HighlightGrid(highlights)
+    turnarounds = 1 if shape == "out_and_back" else 0
     scored = [
-        Choice(c, score_route(graph, c.arcs, distance_m, prefs, coverage, grid))
-        for c in generate_candidates(graph, start, distance_m, prefs, coverage, highlights=highlights, seed=seed)
+        Choice(c, score_route(graph, c.arcs, distance_m, prefs, coverage, grid, turnarounds=turnarounds))
+        for c in generate_candidates(graph, start, distance_m, prefs, coverage, highlights=highlights,
+                                     seed=seed, shape=shape)
     ]
     return choose(graph, scored, n)
