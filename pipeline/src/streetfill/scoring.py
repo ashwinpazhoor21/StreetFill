@@ -41,28 +41,24 @@ from typing import Mapping, Sequence
 
 from .costs import Preferences
 from .geo import XY, LatLon, bearing_diff_deg, bearing_xy_deg
-from .loops import Candidate, generate_candidates
+from .loops import HIGHLIGHT_M, MAX_HIGHLIGHTS, NEW_BELOW, Candidate, generate_candidates
 from .route_highlights import HighlightGrid, HighlightPoint, load_highlights  # noqa: F401  (re-exported)
 from .routing import Graph
-from .scenery import WITHIN_M, HIGHLIGHT
 
 W_DISTANCE = 3.0
 W_NEW = 2.0
 W_TERRAIN = 1.5
 W_SCENERY = 1.0
 W_HIGHLIGHT = 0.3
-MAX_HIGHLIGHTS = 3
 W_REPEAT = 2.0
 W_TURNS = 0.05
 FREE_TURNS_PER_MILE = 8.0
 W_SPUR = 1.0
 
-NEW_BELOW = 0.5  # coverage under this counts as new (6.5)
 FLAT_MAX_FT_PER_MI = 15.0
 HILLY_MIN_FT_PER_MI = 50.0
 TERRAIN_SCALE_FT_PER_MI = 50.0
 TURN_DEG = 45.0
-HIGHLIGHT_M = WITHIN_M[HIGHLIGHT]
 MAX_OVERLAP = 0.40
 
 M_PER_MI = 1609.344
@@ -236,6 +232,6 @@ def best_routes(
     grid = HighlightGrid(highlights)
     scored = [
         Choice(c, score_route(graph, c.arcs, distance_m, prefs, coverage, grid))
-        for c in generate_candidates(graph, start, distance_m, prefs, coverage, seed=seed)
+        for c in generate_candidates(graph, start, distance_m, prefs, coverage, highlights=highlights, seed=seed)
     ]
     return choose(graph, scored, n)
