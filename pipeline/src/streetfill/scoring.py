@@ -36,47 +36,33 @@ are returned.
 from __future__ import annotations
 
 import math
-import sqlite3
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 from .costs import Preferences
-from .geo import XY, LatLon, LocalProjection, bearing_diff_deg, bearing_xy_deg, point_segment_distance
-from .loops import Candidate, generate_candidates
+from .geo import XY, LatLon, bearing_diff_deg, bearing_xy_deg
+from .loops import HIGHLIGHT_M, MAX_HIGHLIGHTS, NEW_BELOW, Candidate, generate_candidates
+from .route_highlights import HighlightGrid, HighlightPoint, load_highlights  # noqa: F401  (re-exported)
 from .routing import Graph
-from .scenery import WITHIN_M, HIGHLIGHT
 
 W_DISTANCE = 3.0
 W_NEW = 2.0
 W_TERRAIN = 1.5
 W_SCENERY = 1.0
 W_HIGHLIGHT = 0.3
-MAX_HIGHLIGHTS = 3
 W_REPEAT = 2.0
 W_TURNS = 0.05
 FREE_TURNS_PER_MILE = 8.0
 W_SPUR = 1.0
 
-NEW_BELOW = 0.5  # coverage under this counts as new (6.5)
 FLAT_MAX_FT_PER_MI = 15.0
 HILLY_MIN_FT_PER_MI = 50.0
 TERRAIN_SCALE_FT_PER_MI = 50.0
 TURN_DEG = 45.0
-HIGHLIGHT_M = WITHIN_M[HIGHLIGHT]
 MAX_OVERLAP = 0.40
 
 M_PER_MI = 1609.344
 FT_PER_M = 3.28084
-_CELL_M = 150.0
-
-
-@dataclass(frozen=True)
-class HighlightPoint:
-    id: int
-    name: str
-    category: str
-    xy: XY
 
 
 @dataclass
@@ -99,16 +85,6 @@ class Score:
 class Choice:
     candidate: Candidate
     score: Score
-
-
-def load_highlights(path: str | Path, projection: LocalProjection) -> list[HighlightPoint]:
-    """The pack's highlights, placed in ``projection`` (pass the graph's)."""
-    con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
-    try:
-        rows = con.execute("SELECT id, name, category, lat, lon FROM highlights ORDER BY id").fetchall()
-    finally:
-        con.close()
-    return [HighlightPoint(i, name, cat, projection.to_xy((lat, lon))) for i, name, cat, lat, lon in rows]
 
 
 def terrain_band(s: float) -> tuple[float, float]:
@@ -150,38 +126,18 @@ def _along(p: XY, a: XY, b: XY) -> float:
     return (p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])
 
 
-class _HighlightGrid:
-    def __init__(self, highlights: Iterable[HighlightPoint]) -> None:
-        self.cells: dict[tuple[int, int], list[HighlightPoint]] = {}
-        for h in highlights:
-            self.cells.setdefault(self._cell(h.xy), []).append(h)
-
-    @staticmethod
-    def _cell(xy: XY) -> tuple[int, int]:
-        return math.floor(xy[0] / _CELL_M), math.floor(xy[1] / _CELL_M)
-
-    def near_segment(self, a: XY, b: XY, within: float) -> Iterable[HighlightPoint]:
-        x0, y0 = self._cell((min(a[0], b[0]) - within, min(a[1], b[1]) - within))
-        x1, y1 = self._cell((max(a[0], b[0]) + within, max(a[1], b[1]) + within))
-        for cx in range(x0, x1 + 1):
-            for cy in range(y0, y1 + 1):
-                for h in self.cells.get((cx, cy), ()):
-                    if point_segment_distance(h.xy, a, b) <= within:
-                        yield h
-
-
 def score_route(
     graph: Graph,
     arcs: Sequence[tuple[int, bool]],
     distance_m: float,
     prefs: Preferences = Preferences(),
     coverage: Mapping[int, float] = {},
-    highlights: Sequence[HighlightPoint] | _HighlightGrid = (),
+    highlights: Sequence[HighlightPoint] | HighlightGrid = (),
 ) -> Score:
     """Score one route, given as (edge id, forward) arcs in order."""
     if distance_m <= 0:
         raise ValueError("distance must be positive")
-    grid = highlights if isinstance(highlights, _HighlightGrid) else _HighlightGrid(highlights)
+    grid = highlights if isinstance(highlights, HighlightGrid) else HighlightGrid(highlights)
     length = new = scenic = repeated = 0.0
     gain = 0.0
     has_elevation = False
@@ -273,9 +229,9 @@ def best_routes(
     n: int = 3,
 ) -> list[Choice]:
     """Generate the 6.3 candidates, score them (6.4) and choose up to ``n`` different ones."""
-    grid = _HighlightGrid(highlights)
+    grid = HighlightGrid(highlights)
     scored = [
         Choice(c, score_route(graph, c.arcs, distance_m, prefs, coverage, grid))
-        for c in generate_candidates(graph, start, distance_m, prefs, coverage, seed=seed)
+        for c in generate_candidates(graph, start, distance_m, prefs, coverage, highlights=highlights, seed=seed)
     ]
     return choose(graph, scored, n)
