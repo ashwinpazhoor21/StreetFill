@@ -17,7 +17,7 @@ Phasing follows **Option B** in the product plan (section 12): v1 with Discover 
 |---|---|---|
 | 1 | Matching spike: Python reference matcher, measured against hand-labelled streets (Gate 1) | **Tooling done**; the Gate 1 run on the owner's Health data is deferred (#7) |
 | 2 | Street-pack pipeline v2 (paths, elevation, scenery, highlights) | **Pipeline done** (paths, boundaries and neighborhoods, elevation, scenery, highlights and photo lookup, validation, publishing). Waiting on the owner: the licence check (#13) and a CDN for photo mirroring. Real city packs are not built yet. |
-| 3 | Route-generation spike (Gate 2) | **Next** |
+| 3 | Route-generation spike (Gate 2) | **Generator done** (routing graph, edge costs, loop and out-and-back candidates, scoring and choosing three, GPX and HTML preview). The Gate 2 rating on the owner's coverage is deferred (#17). |
 | 4–12 | iOS app, TestFlight, launch | Not started |
 
 ## Repository layout

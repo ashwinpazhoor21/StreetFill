@@ -86,6 +86,40 @@ streetfill report      --pack pipeline/out/pack.sqlite --match data/match.json -
 
 The label sheet carries no matcher predictions, so labelling stays blind. An edge counts as *predicted ran* when at least half its checkpoints were visited (`--ran-threshold`). Agreement = correct ÷ labelled; recall = found ÷ labelled ran. Gate 1 passes at 95% or higher on both (product plan 5.8, section 14). Streets and paths are scored separately: the sheet has a `layer` column, `--sample` and `--path-sample` sample each layer on its own, and `evaluate` prints a street section (the gate) and a paths section (reported only).
 
+## Gate 2: generate routes to rate
+
+Routes use your coverage (from `streetfill match`) and start where you run, so write them under `data/` too.
+
+```bash
+streetfill routes --pack pipeline/out/pack.sqlite --start 41.90,-87.65 --distance 5mi \
+  --coverage data/match.json --newness 0.7 --scenery water,park --terrain rolling --out-dir data/routes/01
+```
+
+This writes `preview.html` and `option-1.gpx` to `option-3.gpx`. Each GPX file is one track, which watches and route apps import as a course. The page loads nothing from the network. Each option gets a card with:
+
+- a map with new streets (under 50% covered) marked
+- the elevation profile
+- distance, gain and new share
+- highlights in route order with the mile point
+- the score terms
+
+Options:
+
+- `--shape out-and-back` turns at a waypoint about half the distance out.
+- `--quiet` prefers quiet streets.
+- `--seed` gives a different but repeatable set.
+- `--scenery` takes water, beach, park and landmark.
+- `--terrain` takes flat, rolling or hilly, or a number from -1 to 1.
+
+Without `--coverage`, every street counts as new.
+
+How routes are built (product plan 6.2–6.4), with every weight still to be tuned in this spike:
+
+1. Each edge costs its length × a factor for terrain, quiet streets, reuse, newness and scenery.
+2. 24 candidates go out on different bearings. Their waypoints snap to rewarding nodes, and one can be pulled toward the selected scenery.
+3. Each candidate is fitted to the distance.
+4. Candidates are scored, and the three best are chosen so that no two share 40% or more of their length.
+
 ## Personal data
 
 Apple Health exports contain your location history. Keep them under `data/` at the repository root, which is git-ignored, and never commit them.
