@@ -110,6 +110,20 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--match", required=True, help="match result .json")
     rp.add_argument("--out", required=True, help="output .html")
     rp.add_argument("--ran-threshold", type=float, default=0.5)
+
+    gp = sub.add_parser("routes", help="generate three route options and write GPX files and an HTML preview")
+    gp.add_argument("--pack", required=True)
+    gp.add_argument("--start", required=True, help="lat,lon of the start")
+    gp.add_argument("--distance", required=True, help="target distance with a unit: 5mi, 8km or 5000m")
+    gp.add_argument("--shape", choices=["loop", "out-and-back"], default="loop")
+    gp.add_argument("--terrain", default="rolling", help="flat, rolling, hilly, or a number from -1 to 1")
+    gp.add_argument("--quiet", action="store_true", help="prefer quiet streets")
+    gp.add_argument("--newness", type=float, default=0.0, help="New-to-me, 0 to 1 (needs --coverage to mean much)")
+    gp.add_argument("--scenery", default="", help="comma list of water, beach, park, landmark")
+    gp.add_argument("--coverage", help="match result .json from `streetfill match`; without it every street is new")
+    gp.add_argument("--seed", type=int, default=0)
+    gp.add_argument("--out-dir", required=True, help="folder for preview.html and option-N.gpx (keep it under data/)")
+    gp.add_argument("--title", default="Route options")
     return parser
 
 
@@ -576,6 +590,90 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+DISTANCE_UNITS = {"mi": 1609.344, "km": 1000.0, "m": 1.0}
+TERRAIN_NAMES = {"flat": -1.0, "rolling": 0.0, "hilly": 1.0}
+SCENERY_NAMES = {"water": "water", "waterfront": "water", "beach": "beach", "beaches": "beach",
+                 "park": "park", "parks": "park", "landmark": "highlight", "landmarks": "highlight",
+                 "highlight": "highlight"}
+
+
+def parse_distance(text: str) -> float:
+    """Metres from ``5mi``, ``8km`` or ``5000m``."""
+    t = text.strip().lower().replace(" ", "")
+    for unit in ("mi", "km", "m"):
+        if t.endswith(unit):
+            try:
+                value = float(t[: -len(unit)])
+            except ValueError:
+                break
+            if value > 0:
+                return value * DISTANCE_UNITS[unit]
+            break
+    raise ValueError(f"distance {text!r}: use a positive number with mi, km or m, such as 5mi")
+
+
+def parse_terrain(text: str) -> float:
+    t = text.strip().lower()
+    if t in TERRAIN_NAMES:
+        return TERRAIN_NAMES[t]
+    try:
+        return float(t)
+    except ValueError:
+        raise ValueError(f"terrain {text!r}: use flat, rolling, hilly or a number from -1 to 1") from None
+
+
+def parse_scenery(text: str) -> int:
+    from .scenery import NAMES
+
+    bits = {name: bit for bit, name in NAMES.items()}
+    flags = 0
+    for word in filter(None, (w.strip().lower() for w in text.split(","))):
+        if word not in SCENERY_NAMES:
+            raise ValueError(f"scenery {word!r}: choose from water, beach, park, landmark")
+        flags |= bits[SCENERY_NAMES[word]]
+    return flags
+
+
+def cmd_routes(args: argparse.Namespace) -> int:
+    from .costs import Preferences, coverage_from_result
+    from .evaluation import load_result
+    from .preview import M_PER_MI, _pct, write_preview
+    from .routing import Graph
+    from .scoring import best_routes, load_highlights
+
+    try:
+        try:
+            lat, lon = (float(v) for v in args.start.split(","))
+        except ValueError:
+            raise ValueError(f"start {args.start!r}: use lat,lon such as 41.90,-87.65") from None
+        distance_m = parse_distance(args.distance)
+        prefs = Preferences(terrain=parse_terrain(args.terrain), quiet=args.quiet, newness=args.newness,
+                            scenery=parse_scenery(args.scenery))
+        coverage = coverage_from_result(load_result(args.coverage)) if args.coverage else {}
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    graph = Graph.from_pack(args.pack)
+    highlights = load_highlights(args.pack, graph.projection)
+    shape = args.shape.replace("-", "_")
+    try:
+        chosen = best_routes(graph, (lat, lon), distance_m, prefs, coverage, highlights, seed=args.seed, shape=shape)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    paths = write_preview(args.out_dir, graph, chosen, distance_m, coverage, highlights, title=args.title)
+    if not chosen:
+        print("no routes found for this start and distance")
+    for i, ch in enumerate(chosen, 1):
+        c, s = ch.candidate, ch.score
+        gain = f"{s.gain_m * 3.28084:.0f} ft" if s.gain_m is not None else "no elevation"
+        print(f"option {i}: {s.length_m / M_PER_MI:.2f} mi {args.shape} ({_pct(c.distance_error)}), {gain}, "
+              f"{s.new_share:.0%} new, {len(s.highlights)} highlights, score {s.total:.2f}")
+    print(f"wrote {', '.join(str(p) for p in paths)}")
+    print(PRIVACY_NOTE.replace("contains your location history", "shows your start point and coverage"))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -584,6 +682,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     commands = {
         "report": cmd_report,
+        "routes": cmd_routes,
         "build-pack": cmd_build_pack,
         "boundary-query": cmd_boundary_query,
         "feature-query": cmd_feature_query,
