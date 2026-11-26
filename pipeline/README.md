@@ -86,6 +86,26 @@ streetfill report      --pack pipeline/out/pack.sqlite --match data/match.json -
 
 The label sheet carries no matcher predictions, so labelling stays blind. An edge counts as *predicted ran* when at least half its checkpoints were visited (`--ran-threshold`). Agreement = correct ÷ labelled; recall = found ÷ labelled ran. Gate 1 passes at 95% or higher on both (product plan 5.8, section 14). Streets and paths are scored separately: the sheet has a `layer` column, `--sample` and `--path-sample` sample each layer on its own, and `evaluate` prints a street section (the gate) and a paths section (reported only).
 
+## Fixtures for the Swift port
+
+```bash
+streetfill fixtures   # rewrites pipeline/fixtures/matcher.json
+```
+
+The Swift matcher must agree with this one on 99.5% or more of checkpoints and must generate checkpoints the same way (product plan 5.3 and 5.4).
+
+`pipeline/fixtures/matcher.json` is self-contained, so the Swift tests need no pack file. It holds:
+
+- the projection origin
+- every matching threshold
+- the edges with their geometry
+- every checkpoint (edge, index, offset, position, bearing)
+- 12 synthetic recorded routes, each with the checkpoints this matcher visits
+
+The routes cover a plain run, an out-and-back, inaccurate points, a GPS jump, a long pause, a trail beside a primary road (both ways), a tie between two streets, a corner, points without times, a short edge and a bending road. GPS error is simulated as seeded drift.
+
+A test fails when the generator's output no longer matches the committed file. After a deliberate matcher change, run `streetfill fixtures` and commit the new file with the change.
+
 ## Gate 2: generate routes to rate
 
 Routes use your coverage (from `streetfill match`) and start where you run, so write them under `data/` too.

@@ -124,6 +124,10 @@ def build_parser() -> argparse.ArgumentParser:
     gp.add_argument("--seed", type=int, default=0)
     gp.add_argument("--out-dir", required=True, help="folder for preview.html and option-N.gpx (keep it under data/)")
     gp.add_argument("--title", default="Route options")
+
+    xp = sub.add_parser("fixtures", help="write the shared fixtures for the Swift port (synthetic data only)")
+    xp.add_argument("--out-dir", default=str(Path(__file__).resolve().parents[2] / "fixtures"),
+                    help="folder to write into (default: pipeline/fixtures)")
     return parser
 
 
@@ -634,6 +638,14 @@ def parse_scenery(text: str) -> int:
     return flags
 
 
+def cmd_fixtures(args: argparse.Namespace) -> int:
+    from .fixtures import write_fixtures
+
+    for path in write_fixtures(args.out_dir):
+        print(f"wrote {path}")
+    return 0
+
+
 def cmd_routes(args: argparse.Namespace) -> int:
     from .costs import Preferences, coverage_from_result
     from .evaluation import load_result
@@ -683,6 +695,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = {
         "report": cmd_report,
         "routes": cmd_routes,
+        "fixtures": cmd_fixtures,
         "build-pack": cmd_build_pack,
         "boundary-query": cmd_boundary_query,
         "feature-query": cmd_feature_query,
