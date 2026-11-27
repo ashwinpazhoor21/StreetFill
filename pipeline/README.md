@@ -130,6 +130,9 @@ This writes `preview.html` and `option-1.gpx` to `option-3.gpx`. Each GPX file i
 - distance, gain and new share
 - highlights in route order with the mile point
 - the score terms
+- the neighborhoods it passes through, which of them are new to you, and each one's street coverage before and after the run
+
+The command also prints each neighborhood's coverage before and after.
 
 Options:
 

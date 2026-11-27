@@ -8,7 +8,8 @@ with:
   6.5 definition: coverage under 50%) and the highlights passed;
 * the elevation profile, with a hover readout of mile and elevation;
 * the 6.5 annotation (distance, elevation gain, new share, highlights in
-  route order with the mile point) and the 6.4 score terms.
+  route order with the mile point, neighborhoods touched with the street
+  coverage before and after) and the 6.4 score terms.
 
 The GPX files have one track each, which running watches and route apps
 import as a course. Elevation is written where the pack has it (at graph
@@ -23,6 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from .annotation import NeighborhoodCoverage, NeighborhoodGain
 from .geo import XY, LatLon
 from .loops import HIGHLIGHT_M, NEW_BELOW
 from .route_highlights import HighlightGrid, HighlightPoint
@@ -270,8 +272,19 @@ def _pct(x: float) -> str:
     return f"{x + 0.0:+.1f}%" if x else "0.0%"
 
 
-def _card(graph, choice: Choice, index: int, frame: _Frame, coverage, grid) -> str:
+def _hood_rows(gains: Sequence[NeighborhoodGain]) -> str:
+    if not gains:
+        return "<p class='sec'>No neighborhood data in this pack</p>"
+    return "<ul>" + "".join(
+        f"<li>{html.escape(g.name)}{' <b>new</b>' if g.new else ''} <span class='sec'>· "
+        f"{g.before:.1%} → {g.after:.1%} (+{g.gain * 100:.1f} pts)</span></li>"
+        for g in gains
+    ) + "</ul>"
+
+
+def _card(graph, choice: Choice, index: int, frame: _Frame, coverage, grid, hoods: NeighborhoodCoverage) -> str:
     c, s = choice.candidate, choice.score
+    gains = hoods.gains(c.arcs)
     stops = highlight_stops(graph, c.arcs, grid)
     profile = elevation_profile(graph, c.arcs)
     gain = f"{s.gain_m * FT_PER_M:,.0f} ft" if s.gain_m is not None else "n/a"
@@ -281,7 +294,8 @@ def _card(graph, choice: Choice, index: int, frame: _Frame, coverage, grid) -> s
         f"<li>{html.escape(st.highlight.name)} <span class='sec'>({html.escape(st.highlight.category)}) · "
         f"mile {st.at_m / M_PER_MI:.1f}</span></li>"
         for st in stops
-    ) or "<li class='sec'>None within 75 m</li>"
+    )
+    stop_list = f"<ol>{stop_rows}</ol>" if stops else "<p class='sec'>None within 75 m</p>"
     terms = "".join(f"<tr><td>{html.escape(k)}</td><td>{v:+.2f}</td></tr>" for k, v in s.terms.items())
     return f"""<section class="card r{index}">
 <h2><span class="swatch"></span>Option {index} · {s.length_m / M_PER_MI:.2f} mi {shape}</h2>
@@ -290,6 +304,7 @@ def _card(graph, choice: Choice, index: int, frame: _Frame, coverage, grid) -> s
 <div><b>{gain}</b><span class="sec">elevation gain</span></div>
 <div><b>{s.new_share:.0%}</b><span class="sec">on new streets</span></div>
 <div><b>{len(stops)}</b><span class="sec">highlights</span></div>
+<div><b>{sum(g.new for g in gains)}</b><span class="sec">new neighborhoods</span></div>
 </div>
 <div class="map"><svg viewBox="{vx:.1f} {vy:.1f} {vw:.1f} {vh:.1f}" role="img" aria-label="Map of option {index}">
 <use href="#streets"/>
@@ -298,7 +313,9 @@ def _card(graph, choice: Choice, index: int, frame: _Frame, coverage, grid) -> s
 <h3>Elevation</h3>
 {_profile_svg(profile, s.length_m)}
 <h3>Highlights</h3>
-<ol>{stop_rows}</ol>
+{stop_list}
+<h3>Neighborhoods</h3>
+{_hood_rows(gains)}
 <details><summary>Score {s.total:.2f} (lower is better)</summary>
 <table><tbody>{terms}
 <tr><td>turns per mile</td><td>{s.turns_per_mile:.1f}</td></tr>
@@ -314,9 +331,11 @@ def build_preview(
     highlights: Sequence[HighlightPoint] = (),
     *,
     title: str = "Route options",
+    neighborhoods: Mapping[int, str] = {},
 ) -> str:
-    """The HTML page for up to three chosen routes."""
+    """The HTML page for up to three chosen routes. ``neighborhoods`` maps pack neighborhood ids to names."""
     grid = HighlightGrid(highlights)
+    hoods = NeighborhoodCoverage(graph, coverage, neighborhoods)
     pts = [p for ch in choices for e, f in ch.candidate.arcs for p in _arc_xy(graph, e, f)]
     if not pts:
         body = '<p class="sec">No routes were found for this start and distance.</p>'
@@ -324,7 +343,7 @@ def build_preview(
     else:
         frame = _Frame(pts)
         streets = _background(graph, frame)
-        body = "\n".join(_card(graph, ch, i, frame, coverage, grid) for i, ch in enumerate(choices, 1))
+        body = "\n".join(_card(graph, ch, i, frame, coverage, grid, hoods) for i, ch in enumerate(choices, 1))
     css_light = "".join(f"--r{i}:{c};" for i, c in enumerate(ROUTE_COLOURS_LIGHT, 1))
     css_dark = "".join(f"--r{i}:{c};" for i, c in enumerate(ROUTE_COLOURS_DARK, 1))
     route_css = "".join(
@@ -362,7 +381,7 @@ path{{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-sca
 .grid{{stroke:var(--line);stroke-width:1}} .tick{{font-size:11px;fill:var(--sec)}}
 .cross{{stroke:var(--sec);stroke-width:1}}
 table{{border-collapse:collapse}} td{{padding:2px 12px 2px 0;font-variant-numeric:tabular-nums}}
-ol{{margin:4px 0;padding-left:22px}}
+ol,ul{{margin:4px 0;padding-left:22px}}
 {route_css}
 </style></head>
 <body><div class="viz-root"><main>
@@ -401,12 +420,14 @@ def write_preview(
     highlights: Sequence[HighlightPoint] = (),
     *,
     title: str = "Route options",
+    neighborhoods: Mapping[int, str] = {},
 ) -> list[Path]:
     """Write ``preview.html`` and ``option-N.gpx`` for each route into ``out_dir``. Returns the paths."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     page = out / "preview.html"
-    page.write_text(build_preview(graph, choices, distance_m, coverage, highlights, title=title), encoding="utf-8")
+    page.write_text(build_preview(graph, choices, distance_m, coverage, highlights, title=title,
+                                   neighborhoods=neighborhoods), encoding="utf-8")
     paths = [page]
     for i, ch in enumerate(choices, 1):
         p = out / f"option-{i}.gpx"
