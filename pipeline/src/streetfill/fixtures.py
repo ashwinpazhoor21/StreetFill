@@ -1,4 +1,4 @@
-"""Shared fixtures for the Swift port (plan 5.4 step 6 and 5.3).
+"""Shared fixtures for the Swift port (plan 5.4 step 6 and 5.3; routes in ``route_fixtures``).
 
 The Swift matcher must agree with this one on 99.5% or more of checkpoints, and
 must generate checkpoints identically. A matcher fixture is one self-contained
@@ -206,6 +206,9 @@ def dumps(fixture: dict) -> str:
 def write_fixtures(out_dir: str | Path) -> list[Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    path = out / "matcher.json"
-    path.write_text(dumps(builtin_matcher_fixture()), encoding="utf-8")
-    return [path]
+    from . import route_fixtures
+
+    matcher_path, routes_path = out / "matcher.json", out / "routes.json"
+    matcher_path.write_text(dumps(builtin_matcher_fixture()), encoding="utf-8")
+    routes_path.write_text(route_fixtures.dumps(route_fixtures.builtin_route_fixture()), encoding="utf-8")
+    return [matcher_path, routes_path]
