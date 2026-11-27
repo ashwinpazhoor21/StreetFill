@@ -647,6 +647,7 @@ def cmd_fixtures(args: argparse.Namespace) -> int:
 
 
 def cmd_routes(args: argparse.Namespace) -> int:
+    from .annotation import NeighborhoodCoverage, load_neighborhood_names
     from .costs import Preferences, coverage_from_result
     from .evaluation import load_result
     from .preview import M_PER_MI, _pct, write_preview
@@ -673,7 +674,10 @@ def cmd_routes(args: argparse.Namespace) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    paths = write_preview(args.out_dir, graph, chosen, distance_m, coverage, highlights, title=args.title)
+    names = load_neighborhood_names(args.pack)
+    hoods = NeighborhoodCoverage(graph, coverage, names)
+    paths = write_preview(args.out_dir, graph, chosen, distance_m, coverage, highlights, title=args.title,
+                          neighborhoods=names)
     if not chosen:
         print("no routes found for this start and distance")
     for i, ch in enumerate(chosen, 1):
@@ -681,6 +685,8 @@ def cmd_routes(args: argparse.Namespace) -> int:
         gain = f"{s.gain_m * 3.28084:.0f} ft" if s.gain_m is not None else "no elevation"
         print(f"option {i}: {s.length_m / M_PER_MI:.2f} mi {args.shape} ({_pct(c.distance_error)}), {gain}, "
               f"{s.new_share:.0%} new, {len(s.highlights)} highlights, score {s.total:.2f}")
+        for g in hoods.gains(c.arcs):
+            print(f"  {g.name}{' (new)' if g.new else ''}: {g.before:.1%} -> {g.after:.1%}")
     print(f"wrote {', '.join(str(p) for p in paths)}")
     print(PRIVACY_NOTE.replace("contains your location history", "shows your start point and coverage"))
     return 0
