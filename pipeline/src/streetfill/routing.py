@@ -143,7 +143,23 @@ class Graph:
             ).fetchall()
         finally:
             con.close()
-        proj = LocalProjection(float(meta["origin_lat"]), float(meta["origin_lon"]))
+        decoded = [
+            (eid, sid, a, b, hw, length, layer, decode_geometry(blob),
+             decode_elevation(ele_blob) if ele_blob else None, gain, loss, scenery or 0, hood)
+            for eid, sid, a, b, hw, length, layer, blob, ele_blob, gain, loss, scenery, hood in rows
+        ]
+        return cls.from_rows((float(meta["origin_lat"]), float(meta["origin_lon"])), decoded, connectors=connectors)
+
+    @classmethod
+    def from_rows(cls, origin: LatLon, rows: Iterable[tuple], *, connectors: bool = True) -> "Graph":
+        """Build from decoded pack edge rows, in pack id order.
+
+        Each row: ``(id, street_id, from_node, to_node, highway, length_m, layer,
+        geometry, elevation profile or None, gain_m, loss_m, scenery, neighborhood_id)``.
+        The route fixtures store exactly these rows, so the Swift port builds the
+        same graph from them.
+        """
+        proj = LocalProjection(*origin)
         index: dict[int, int] = {}
         node_ids: list[int] = []
         coords: list[LatLon] = []
@@ -161,12 +177,9 @@ class Graph:
                 elevation[i] = ele
             return i
 
-        decoded = []
+        decoded = [(*r[:7], [tuple(p) for p in r[7]], *r[8:]) for r in rows]  # points as tuples
         ends: dict[LatLon, int] = {}  # end coordinate -> pack node id
-        for eid, sid, a, b, hw, length, layer, blob, ele_blob, gain, loss, scenery, hood in rows:
-            geom = decode_geometry(blob)
-            profile = decode_elevation(ele_blob) if ele_blob else None
-            decoded.append((eid, sid, a, b, hw, length, layer, geom, profile, gain, loss, scenery or 0, hood))
+        for _, _, a, b, _, _, _, geom, _, _, _, _, _ in decoded:
             ends.setdefault(geom[0], a)
             ends.setdefault(geom[-1], b)
 

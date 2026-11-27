@@ -89,7 +89,7 @@ The label sheet carries no matcher predictions, so labelling stays blind. An edg
 ## Fixtures for the Swift port
 
 ```bash
-streetfill fixtures   # rewrites pipeline/fixtures/matcher.json
+streetfill fixtures   # rewrites pipeline/fixtures/matcher.json and routes.json
 ```
 
 The Swift matcher must agree with this one on 99.5% or more of checkpoints and must generate checkpoints the same way (product plan 5.3 and 5.4).
@@ -104,7 +104,15 @@ The Swift matcher must agree with this one on 99.5% or more of checkpoints and m
 
 The routes cover a plain run, an out-and-back, inaccurate points, a GPS jump, a long pause, a trail beside a primary road (both ways), a tie between two streets, a corner, points without times, a short edge and a bending road. GPS error is simulated as seeded drift.
 
-A test fails when the generator's output no longer matches the committed file. After a deliberate matcher change, run `streetfill fixtures` and commit the new file with the change.
+`pipeline/fixtures/routes.json` is for the route generator, which must reproduce at least 95% of each route's length on the same seed (plan 6.5). It holds:
+
+- the decoded edge rows of a synthetic pack: a 2.4 km grid with a primary road, footways and steps, a hill, a waterfront, a park and three highlights
+- the coverage
+- 9 cases (start, distance, shape, preferences, seed), each with the three chosen routes
+
+Each chosen route has its arcs in order (pack edge, from and to positions, length), its score terms and its waypoints. `Graph.from_rows` builds the graph from exactly those rows.
+
+Tests fail when either file no longer matches what the generators produce. After a deliberate matching or routing change, run `streetfill fixtures` and commit the new files with the change.
 
 ## Gate 2: generate routes to rate
 
